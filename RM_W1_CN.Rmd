@@ -1,0 +1,44 @@
+---
+title: "Regression Models Week 1"
+author: "Yigit Ozan Berk"
+date: "7/4/2019"
+output: html_document
+---
+
+# Week 1
+
+Syllabus
+
+Module 1, least squares and linear regression
+
+01_01 Introduction
+01_02 Notation
+01_03 Ordinary least squares
+01_04 Regression to the mean
+01_05 Linear regression
+01_06 Residuals
+01_07 Regression inference
+Module 2, Multivariable regression
+
+02_01 Multivariate regression
+02_02 Multivariate examples
+02_03 Adjustment
+02_04 Residual variation and diagnostics
+02_05 Multiple variables
+Module 3, Generalized linear models
+
+03_01 GLMs
+03_02 Binary outcomes
+03_03 Count outcomes
+03_04 Olio
+Module 4, Logistic Regression and Poisson Regression
+
+Logistic Regression
+Poisson Regression
+Hodgepodge
+
+```{r}
+library(swirl)
+install_from_swirl("Regression Models")
+```
+
