@@ -1,0 +1,47 @@
+---
+title: "Cekilis Simulasyonu"
+author: "Yigit Ozan Berk"
+date: "7/7/2019"
+output: html_document
+---
+
+# Overview Parameters
+
+Buyuk Odul 3.000.000 TL icin katilimci simulasyonu
+
+Gamma Distribution
+
+n <- 10000
+shape <- 1
+scale <- 6.57
+
+```{r}
+library(ggplot2)
+set.seed(1)
+myv <- rgamma(10000, shape =1 , scale = 6.57)
+qplot(myv, binwidth = 0.25) + geom_vline(xintercept = quantile(myv, 0.975))
+```
+
+```{r}
+quantile(myv, 0.975)
+```
+
+```{r}
+mean(myv)
+```
+
+```{r}
+quantile(myv, 0.025)
+```
+
+```{r}
+mns <- NULL
+set.seed(123)
+for(i in 1:1000)
+        mns <- c(mns, mean(rgamma(150, shape = 1, scale = 6.57)))
+sample_mean <- mean(mns)
+sample_var <- var(mns)
+sample_sd <- sd(mns)
+rbind(sample_mean, sample_var, sample_sd)
+```
+
