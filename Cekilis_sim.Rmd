@@ -19,7 +19,7 @@ scale <- 6.57
 library(ggplot2)
 set.seed(1)
 myv <- rgamma(10000, shape =1 , scale = 6.57)
-qplot(myv, binwidth = 0.25) + geom_vline(xintercept = quantile(myv, 0.975))
+qplot(myv, binwidth = 0.25) + geom_vline(xintercept = quantile(myv, 0.975))+ geom_vline(xintercept = 1, col = "magenta") + geom_vline(xintercept = 4, col = "lightblue")
 ```
 
 ```{r}
