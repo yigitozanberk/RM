@@ -1,0 +1,308 @@
+---
+title: 'Course project: Part 1'
+author: "Anastasia Kuprina"
+date: "7/5/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(ggrepel)
+library(tidyverse)
+```
+
+## Overview
+
+The following report covers Task 1 in the final course project of course "Statistical Inference" available on Coursera. In this project I will investigate the exponential distribution in R and compare it with the Central Limit Theorem. 
+
+## Simulations
+
+A thousand simulations are performed. The value for lambda is set at 0.2 and the distribution of means of 40 exponential distributions are used.
+
+The simulations illustrate:
+
+- comparison of the sample mean with the theoretical mean of the distribution, 
+
+- how variable the sample is and compare it to the theoretical variance of the distribution,
+
+- that the distribution is approximately normal.
+
+
+### Sample vs Theoretical means
+
+#### Setup
+
+```{r setup_for_simulations, error=FALSE, message=FALSE}
+set.seed(2612)
+library(tidyverse)
+library(ggrepel)
+# given by the assignment
+lambda <- 0.2
+# number of exponential distributions to use in simulations
+n_of_distributions <- 40
+#number of simulations
+number_of_simulations <- 1000 
+#Running the simulations
+simulations <- replicate(number_of_simulations, 
+                         rexp(n_of_distributions, lambda))
+glimpse(simulations)
+```
+
+#### Mean comparison
+
+Theoretical mean is computed as 1 over lambda:
+```{r theoretical_mean}
+theoretical_mean <- 1/lambda
+paste0('Theoretical mean: ', theoretical_mean)
+```
+
+For a sample mean, I need to compute a mean for each simulation and then find a mean of the sample means.
+
+```{r sample_mean}
+simluated_means <- apply(simulations, 2, mean)
+mean_of_sampled_means <- mean(simluated_means)
+paste0('Sample mean: ', mean_of_sampled_means)
+```
+
+Visually this can be displayed as:
+
+```{r cars, echo=FALSE, fig.height=3}
+ggplot() + 
+  geom_histogram(aes(x = simluated_means), bins = 20) + 
+  geom_vline(xintercept = theoretical_mean, color = 'red') + 
+  geom_label_repel(aes(x = theoretical_mean + 1, y = 200, 
+                 label = paste0('Theoretical mean: ', round(theoretical_mean,2))),
+             color = 'red') +
+  geom_vline(xintercept = mean_of_sampled_means, color = 'green') +
+  geom_label_repel(aes(x = mean_of_sampled_means - 1, y = 200, 
+                       label = paste0('Sample mean: ', round( mean_of_sampled_means,2))),
+                   color = 'green') + 
+  theme_classic() +
+  labs(title = 'Histogram of sampled means compared to the theoretical mean',
+       y = 'Number of occurences',
+       x = 'Sampled mean')
+```
+
+### Sample vs Theoretical variances
+
+Theoretical variance of the exponential distribution is 1/lambda^2:
+
+```{r theoretical_variance}
+theoretical_variance <- 1/(lambda^2)
+paste0('Theoretical variance: ', theoretical_variance)
+```
+
+In the same way I calculated means for the simulated dataset, variance calculation is possible:
+
+```{r sampled_variance}
+simulated_variances <- apply(simulations, 2, var)
+mean_of_sampled_variances <- mean(simulated_variances)
+paste0('Sample data variance: ', mean_of_sampled_variances)
+```
+
+Visually the differences can be displayed for example as following:
+
+```{r vis_variance, echo=F}
+ggplot() + 
+  geom_histogram(aes(x = simulated_variances), bins = 25) + 
+  geom_vline(xintercept = theoretical_variance, color = 'purple') + 
+  geom_label_repel(aes(x = theoretical_variance + 20, y = 300, 
+                 label = paste0('Theoretical variance: ', round(theoretical_variance,2))),
+             color = 'purple') +
+  geom_vline(xintercept = mean_of_sampled_variances, color = 'blue') +
+  geom_label_repel(aes(x = mean_of_sampled_variances - 20, y = 250, 
+                       label = paste0('Sample variance: ', round( mean_of_sampled_variances,2))),
+                   color = 'blue') + 
+  theme_classic() +
+  labs(title = 'Histogram of sampled variances compared to the theoretical variance',
+       y = 'Number of occurences',
+       x = 'Sampled variance')
+```
+
+### Distribution of the means is normally distributed
+
+1) quantile-quantile (qq) plot
+
+```{r normal_or_not, echo=F, fig.height=3}
+ggplot(data = data.frame(simluated_means),
+       aes(sample = simluated_means)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_classic() +
+  labs(title = 'QQ plot of the simulated means data',
+       x = 'Theoretical quantiles',
+       y = 'Sample quantiles')
+```
+
+2) distribution density compared to normal distribution's density if it had the same mean
+
+If we find normal distribution with the same standard deviation and mean as our resampled means and compare the densities, we can "eyeball" the plot to see how close the densities are.
+
+```{r normal_or_not_again, echo=F, fig.height=3}
+min_for_range <- min(simluated_means)
+max_for_range <- max(simluated_means)
+variance_of_means <- var(simluated_means)
+ggplot() +
+  stat_function(aes(x = simluated_means),
+                fun = dnorm, n = 1000, args = list(mean = mean_of_sampled_means,
+                                                   sd = sqrt(variance_of_means)),
+                colour = 'black',
+                size = 2)  +
+  geom_density(aes(x = simluated_means),
+               fill = 'orange',
+               alpha = 0.5) +
+  geom_label_repel(aes(x = mean_of_sampled_means,
+                       y = 0.2,
+                       label = 'Sampled means density'),
+                   color = 'orange') +
+  geom_label_repel(aes(x = mean_of_sampled_means, 
+                       y = 0.6,
+                       label = 'Normal distribution density')) + 
+  labs(title = 'Normal distribution and sampled means densities',
+       subtitle = 'Normal distribution and sample means distributions have the same parameters',
+       x = 'Sampled means',
+       y = 'Density')
+```
+
+
+---
+title: "Statistical Inference Course Project - Part 2"
+author: "Anastasia Kuprina"
+date: "7/5/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+### Overview
+
+The dataset provides data about the effect of Vitamin C on tooth growth in Guinea pigs. The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C by one of the two delivery methods.
+
+
+### Analysis
+
+#### Step 1: load data & explore
+```{r setup, error=FALSE, message=FALSE}
+library(datasets)
+library(tidyverse)
+library(magrittr)
+library(boot)
+library(glue)
+data("ToothGrowth")
+df <- ToothGrowth %>%
+  as_tibble()
+names(df) <- c('tooth_length', 'supplement_type', 'daily_dose')
+# I personally dislike names like 'len' and 'supp' as it's easy to forget what they mean
+glimpse(df)
+summary(df)
+```
+
+#### Step 2: dig around and plot
+
+We can try to detect visually if any differences are present with faceting that ggplot offers
+
+```{r plotting, echo=F, fig.height=3}
+ggplot(data = df, 
+       aes(x =daily_dose, 
+           y = tooth_length)) + 
+  geom_boxplot(aes(fill = as_factor(daily_dose))) + 
+  facet_grid(.~supplement_type) + 
+  geom_point() + 
+  theme_light() + 
+  labs(title = 'Tooth Growth by supplement type and daily dose', 
+       x = 'Daily dose', 
+       y = 'Length of teeth', 
+       fill = 'Daily dose')
+```
+
+Clearly there are a few differences for the groups. Daily dose of 2mg is resulting in higher tooth growth (especially when not giben with Orange Juice - OJ). Overall, however, Orange juice (OJ) seems to have more positive effects compared to VC method.
+
+#### Hypothesis testing
+
+My null hypothesis: supplement type does not have any effect on tooth growth (i.e. tooth growth is the same between supplement types).
+
+In order to run a t-test, we should ensure that means of the data are normally distributed.
+```{r is_normal}
+mean_func <- function(i, x) {
+  mean(x[i])
+}
+is_normal <- function(vector, reps = 1000) {
+  boot_mean <- boot(vector, mean_func, reps)
+  plot(boot_mean)
+}
+is_normal(df$tooth_length)
+```
+Visually checking, the data looks close to normal after 1000 resamples. Now onto the t-test!
+
+```{r t_test}
+t.test(tooth_length ~ supplement_type, data = df, var.equal = F)
+```
+
+The results of the t-test show no difference between the groups (confidence interval includes 0 for the means). We saw that 2mg dose had higher effect for VC supplement method and thus may be increasing the overall mean. We can try and run the test for data without dose of 2mg in the data. This has drawbacks such as (1) biasing the data, (2) decreasing the sample size and degrees of freedom.
+
+
+```{r t_test_specific_to_dose}
+t.test(tooth_length ~ supplement_type, data = df %>% filter(daily_dose < 2), var.equal = F)
+```
+
+With selectively chosen data, confidence intervals no longer include 0. Based on this, we can conclude that:
+
+- means of our data are normally distributed due to the Central Limit Theorem and thus we have used t-test for hypothesis testing
+
+- we assume variances of the two groups are not equal due to not knowing otherwise
+
+In data terms:
+
+- if we do not take 2mg dose into account, with alpha of 0.05 we can reject null hypothesis and conclude that the **two supplement methods do have effect on tooth growth** (or we have seen an unfortunately extreme sample)
+
+- **if we do take 2mg dose into account, with alpha of 0.05 we accept the null hypothesis and conclude there is no difference in supplement methods**
+<br/>
+
+**In practical actionable terms**, if we have to stick with VC, we should give a dose of 2mg. If we can give lower doses, we could go with OJ instead as its efficiency at lower doses is higher.
+
+
+
+#### Bootstrapping means by group
+
+We have seen the groups have difference based on the supplement method. However, what about the dose?
+
+```{r dose_plot, echo=F, fig.height=3}
+ggplot(data = df, 
+       aes(x = as_factor(daily_dose), 
+           y = tooth_length)) + 
+  geom_boxplot(aes(fill = as_factor(daily_dose))) + 
+  geom_point() + 
+  theme_light() + 
+  labs(title = 'Tooth Growth by supplement type and daily dose', 
+       x = 'Daily dose', 
+       y = 'Length of teeth', 
+       fill = 'Daily dose')
+```
+
+There is quite a lot of overlap in single observations but the groups look different. Could the difference be a result of chance?
+
+```{r bootstrap}
+number_of_resamples = 1000
+data.frame(boot = 1:number_of_resamples) %>% # how many repetitions are needed?
+    group_by(boot) %>%
+    do(sample_n(df, nrow(df), replace = T)) %>% # resample with replacement
+    mutate(daily_dose = as_factor(daily_dose)) %>% # turn daily dose into factor
+    group_by(boot, daily_dose) %>% # group by iteration number and daily dose
+    summarise(avg = mean(tooth_length), # find avg
+              stdev = sd(tooth_length),
+              n_samples = n()) %>%
+  ggplot() + # plot
+  geom_density(aes(x = avg, fill = daily_dose),
+               alpha = 0.8) +
+  theme_light() +
+  labs(title = 'Densities of resampled means',
+       subtitle = glue('Resampled {number_of_resamples} times'),
+       x = 'Average tooth growth',
+       y = 'Density',
+       fill = 'Daily dose')
+```
+
+
+This shows that the means are quite different from each other based on the daily dose amount (very little overlap in the densities). A conclusion we can draw from this, that based on all data (**irrespective of the method) higher doses of Vitamin C result in faster tooth growth**.
+
