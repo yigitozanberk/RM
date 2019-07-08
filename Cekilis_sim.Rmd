@@ -5,7 +5,6 @@ date: "7/7/2019"
 output: html_document
 ---
 
-# Overview Parameters
 
 Buyuk Odul 3.000.000 TL icin katilimci simulasyonu
 
@@ -44,4 +43,15 @@ sample_var <- var(mns)
 sample_sd <- sd(mns)
 rbind(sample_mean, sample_var, sample_sd)
 ```
+
+
+
+# Data Input
+
+```{r}
+lotto <- data.frame(state = "NY", year = "2015", grossprofit = 3.1106, netprofit = 1.061)
+colnames(lotto) <- c("state", "year", "grossprofit", "netprofit")
+
+```
+
 
