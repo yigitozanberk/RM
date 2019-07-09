@@ -300,7 +300,7 @@ g
  if the son's height is the predictor, and the father's height is the outcome, the slope is flipped.
  
  
- # Swirl
+# Swirl
  
 
 ```{r}
@@ -316,4 +316,660 @@ install_from_swirl("Regression Models")
 - Least Squares Estimation
 
 
- 
+## introduction
+
+ For this lesson we'll use Sir Francis's parent/child height data which we've
+| taken the liberty to load for you as the variable, galton. (Data is from John
+| Verzani's website, http://wiener.math.csi.cuny.edu/UsingR/.) So let's get
+| started!
+
+Here is a plot of Galton's data, a set of 928 parent/child height pairs. Moms'
+| and dads' heights were averaged together (after moms' heights were adjusted by
+| a factor of 1.08). In our plot we used the R function "jitter" on the
+| children's heights to highlight heights that occurred most frequently. The
+| dark spots in each column rise from left to right suggesting that children's
+| heights do depend on their parents'. Tall parents have tall children and short
+| parents have short children.
+
+Here we add a red (45 degree) line of slope 1 and intercept 0 to the plot. If
+| children tended to be the same height as their parents, we would expect the
+| data to vary evenly about this line. We see this isn't the case. On the left
+| half of the plot we see a concentration of heights above the line, and on the
+| right half we see the concentration below the line.
+
+...
+
+  |====================                                                   |  29%
+| Now we've added a blue regression line to the plot. This is the line which has
+| the minimum variation of the data around it. (For theory see the slides.) Its
+| slope is greater than zero indicating that parents' heights do affect their
+| children's. The slope is also less than 1 as would have been the case if
+| children tended to be the same height as their parents.
+
+...
+
+  |========================                                               |  33%
+| Now's your chance to plot in R. Type "plot(child ~ parent, galton)" at the R
+| prompt.
+
+| You'll notice that this plot looks a lot different than the original we
+| displayed. Why? Many people are the same height to within measurement error,
+| so points fall on top of one another. You can see that some circles appear
+| darker than others. However, by using R's function "jitter" on the children's
+| heights, we can spread out the data to simulate the measurement errors and
+| make high frequency heights more visible.
+
+Now it's your turn to try. Just type "plot(jitter(child,4) ~ parent,galton)"
+| and see the magic.
+
+> plot(jitter(child, 4) ~ parent, galton)
+
+| Perseverance, that's the answer.
+
+  |==================================                                     |  48%
+| Now for the regression line. This is quite easy in R. The function lm (linear
+| model) needs a "formula" and dataset. You can type "?formula" for more
+| information, but, in simple terms, we just need to specify the dependent
+| variable (children's heights) ~ the independent variable (parents' heights).
+
+plot(jitter(child, 4) ~ parent, galton)
+
+| Perseverance, that's the answer.
+
+  |==================================                                     |  48%
+| Now for the regression line. This is quite easy in R. The function lm (linear
+| model) needs a "formula" and dataset. You can type "?formula" for more
+| information, but, in simple terms, we just need to specify the dependent
+| variable (children's heights) ~ the independent variable (parents' heights).
+
+
+So generate the regression line and store it in the variable regrline. Type
+| "regrline <- lm(child ~ parent, galton)"
+
+> regrline <- lm(child ~ parent, galton)
+
+| Excellent work!
+
+  |=========================================                              |  57%
+| Now add the regression line to the plot with "abline". Make the line wide and
+| red for visibility. Type "abline(regrline, lwd=3, col='red')"
+
+abline(regrline, lwd = 3, col = "red")
+
+| Your dedication is inspiring!
+
+  |============================================                           |  62%
+| The regression line will have a slope and intercept which are estimated from
+| data. Estimates are not exact. Their accuracy is gauged by theoretical
+| techniques and expressed in terms of "standard error." You can use
+| "summary(regrline)" to examine the Galton regression line. Do this now.
+
+
+summary(regrline)
+
+Call:
+lm(formula = child ~ parent, data = galton)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.8050 -1.3661  0.0487  1.6339  5.9264 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 23.94153    2.81088   8.517   <2e-16 ***
+parent       0.64629    0.04114  15.711   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.239 on 926 degrees of freedom
+Multiple R-squared:  0.2105,	Adjusted R-squared:  0.2096 
+F-statistic: 246.8 on 1 and 926 DF,  p-value: < 2.2e-16
+
+
+| Nice work!
+
+  |===============================================                        |  67%
+| The slope of the line is the estimate of the coefficient, or multiplier, of
+| "parent", the independent variable of our data (in this case, the parents'
+| heights). From the output of "summary" what is the slope of the regression
+| line?
+
+1: .64629
+2: 23.94153
+3: .04114
+
+Selection: 1
+
+| That's a job well done!
+
+  |===================================================                    |  71%
+| What is the standard error of the slope?
+
+1: 23.94153
+2: .64629
+3: .04114
+
+Selection: 3
+
+| You got it!
+
+  |======================================================                 |  76%
+| A coefficient will be within 2 standard errors of its estimate about 95% of
+| the time. This means the slope of our regression is significantly different
+| than either 0 or 1 since (.64629) +/- (2*.04114) is near neither 0 nor 1.
+
+ We're now adding two blue lines to indicate the means of the children's
+| heights (horizontal) and the parents' (vertical). Note that these lines and
+| the regression line all intersect in a point. Pretty cool, huh? We'll talk
+| more about this in a later lesson. (Something you can look forward to.)
+
+
+  |=============================================================          |  86%
+| The slope of a line shows how much of a change in the vertical direction is
+| produced by a change in the horizontal direction. So, parents "1 inch" above
+| the mean in height tend to have children who are only .65 inches above the
+| mean. The green triangle illustrates this point. From the mean, moving a "1
+| inch distance" horizontally to the right (increasing the parents' height)
+| produces a ".65 inch" increase in the vertical direction (children's height).
+
+...
+
+  |================================================================       |  90%
+| Similarly, parents who are 1 inch below average in height have children who
+| are only .65 inches below average height. The purple triangle illustrates
+| this. From the mean, moving a "1 inch distance" horizontally to the left
+| (decreasing the parents' height) produces a ".65 inch" decrease in the
+| vertical direction (children's height).
+
+## Residuals
+
+| This lesson will focus on the residuals, the distances between the actual
+| children's heights and the estimates given by the regression line. Since all
+| lines are characterized by two parameters, a slope and an intercept, we'll use
+| the least squares criteria to provide two equations in two unknowns so we can
+| solve for these parameters, the slope and intercept.
+
+ The first equation says that the "errors" in our estimates, the residuals,
+| have mean zero. In other words, the residuals are "balanced" among the data
+| points; they're just as likely to be positive as negative. The second equation
+| says that our residuals must be uncorrelated with our predictors, the parents’
+| height. This makes sense - if the residuals and predictors were correlated
+| then you could make a better prediction and reduce the distances (residuals)
+| between the actual outcomes and the predictions.
+
+ We'll demonstrate these concepts now. First regenerate the regression line and
+| call it fit. Use the R function lm. Recall that by default its first argument
+| is a formula such as "child ~ parent" and its second is the dataset, in this
+| case galton.
+
+Now we'll examine fit to see its slope and intercept. The residuals we're
+| interested in are stored in the 928-long vector fit$residuals. If you type
+| fit$residuals you'll see a lot of numbers scroll by which isn't very useful;
+| however if you type "summary(fit)" you will see a more concise display of the
+| regression data. Do this now.
+
+> summary(fit)
+
+Call:
+lm(formula = child ~ parent, data = galton)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.8050 -1.3661  0.0487  1.6339  5.9264 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 23.94153    2.81088   8.517   <2e-16 ***
+parent       0.64629    0.04114  15.711   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.239 on 926 degrees of freedom
+Multiple R-squared:  0.2105,	Adjusted R-squared:  0.2096 
+F-statistic: 246.8 on 1 and 926 DF,  p-value: < 2.2e-16
+
+
+| That's the answer I was looking for.
+
+  |===========                                                            |  16%
+| First check the mean of fit$residuals to see if it's close to 0.
+
+mean(fit$residuals)
+[1] -2.359884e-15
+
+| Great job!
+
+  |=============                                                          |  19%
+| Now check the correlation between the residuals and the predictors. Type
+| "cov(fit$residuals, galton$parent)" to see if it's close to 0.
+
+> cov(fit$residuals, galton$parent)
+[1] -1.790153e-13
+
+| That's a job well done!
+
+  |================                                                       |  22%
+| As shown algebraically in the slides, the equations for the intercept and
+| slope are found by supposing a change is made to the intercept and slope.
+| Squaring out the resulting expressions produces three summations. The first
+| sum is the original term squared, before the slope and intercept were changed.
+| The third sum totals the squared changes themselves. For instance, if we had
+| changed fit’s intercept by adding 2, the third sum would be the total of 928
+| 4’s. The middle sum is guaranteed to be zero precisely when the two equations
+| (the conditions on the residuals) are satisfied.
+
+
+We'll verify these claims now. We've defined for you two R functions, est and
+| sqe. Both take two inputs, a slope and an intercept. The function est
+| calculates a child's height (y-coordinate) using the line defined by the two
+| parameters, (slope and intercept), and the parents' heights in the Galton data
+| as x-coordinates.
+
+Let "mch" represent the mean of the galton childrens' heights and "mph" the
+| mean of the galton parents' heights. Let "ic" and "slope" represent the
+| intercept and slope of the regression line respectively. As shown in the
+| slides and past lessons, the point (mph,mch) lies on the regression line. This
+| means
+
+1: mch = ic + slope*mph
+2: I haven't the slightest idea.
+3: mph = ic + slope*mch
+
+Selection: 1
+
+| All that hard work is paying off!
+
+  |======================                                                 |  31%
+| The function sqe calculates the sum of the squared residuals, the differences
+| between the actual children's heights and the estimated heights specified by
+| the line defined by the given parameters (slope and intercept).  R provides
+| the function deviance to do exactly this using a fitted model (e.g., fit) as
+| its argument. However, we provide sqe because we'll use it to test regression
+| lines different from fit.
+
+We'll see that when we vary or tweak the slope and intercept values of the
+| regression line which are stored in fit$coef, the resulting squared residuals
+| are approximately equal to the sum of two sums of squares - that of the
+| original regression residuals and that of the tweaks themselves. More
+| precisely, up to numerical error,
+
+|===========================                                            |  38%
+| sqe(ols.slope+sl,ols.intercept+ic) == deviance(fit) + sum(est(sl,ic)ˆ2 )
+
+
+Equivalently, sqe(ols.slope+sl,ols.intercept+ic) == sqe(ols.slope,
+| ols.intercept) + sum(est(sl,ic)ˆ2 )
+
+
+The left side of the equation represents the squared residuals of a new line,
+| the "tweaked" regression line. The terms "sl" and "ic" represent the
+| variations in the slope and intercept respectively. The right side has two
+| terms. The first represents the squared residuals of the original regression
+| line and the second is the sum of squares of the variations themselves.
+
+We'll demonstrate this now. First extract the intercept from fit$coef and put
+| it in a variable called ols.ic . The intercept is the first element in the
+| fit$coef vector, that is fit$coef[1].
+
+> ols.ic <- fit$coef[1]
+
+| Perseverance, that's the answer.
+
+  |====================================                                   |  50%
+| Now extract the slope from fit$coef and put it in the variable ols.slope; the
+| slope is the second element in the fit$coef vector, fit$coef[2].
+
+ols.slope <- fit$coef[2]
+
+| That's correct!
+
+  |======================================                                 |  53%
+| Now we'll show you some R code which generates the left and right sides of
+| this equation.  Take a moment to look it over. We've formed two 6-long vectors
+| of variations, one for the slope and one for the intercept. Then we have two
+| "for" loops to generate the two sides of the equation.
+
+```{r}
+#Here are the vectors of variations or tweaks
+sltweak <- c(.01, .02, .03, -.01, -.02, -.03) #one for the slope
+ictweak <- c(.1, .2, .3, -.1, -.2, -.3)  #one for the intercept
+lhs <- numeric()
+rhs <- numeric()
+#left side of eqn is the sum of squares of residuals of the tweaked regression line
+for (n in 1:6) lhs[n] <- sqe(ols.slope+sltweak[n],ols.ic+ictweak[n])
+#right side of eqn is the sum of squares of original residuals + sum of squares of two tweaks
+for (n in 1:6) rhs[n] <- sqe(ols.slope,ols.ic) + sum(est(sltweak[n],ictweak[n])^2)
+```
+
+Subtract the right side, the vector rhs, from the left, the vector lhs, to see
+| the relationship between them. You should get a vector of very small, almost
+| 0, numbers.
+
+lhs - rhs
+[1]  1.264198e-09  2.527486e-09  3.801688e-09 -1.261469e-09 -2.522938e-09
+[6] -3.767127e-09
+
+| All that practice is paying off!
+
+  |==========================================                             |  59%
+| You could also use the R function all.equal with lhs and rhs as arguments to
+| test for equality. Try it now.
+
+all.equal(lhs, rhs)
+[1] TRUE
+
+| You are amazing!
+
+  |============================================                           |  62%
+| Now we'll show that the variance in the children's heights is the sum of the
+| variance in the OLS estimates and the variance in the OLS residuals. First use
+| the R function var to calculate the variance in the children's heights and
+| store it in the variable varChild.
+
+varChild <- var(galton$child)
+
+| Your dedication is inspiring!
+
+  |===============================================                        |  66%
+| Remember that we've calculated the residuals and they're stored in
+| fit$residuals. Use the R function var to calculate the variance in these
+| residuals now and store it in the variable varRes.
+
+> varRes <- var(fit$residuals)
+
+| You are amazing!
+
+  |=================================================                      |  69%
+| Recall that the function "est" calculates the estimates (y-coordinates) of
+| values along the regression line defined by the variables "ols.slope" and
+| "ols.ic". Compute the variance in the estimates and store it in the variable
+| varEst.
+
+> varEst <- est(ols.slope, ols.ic)
+
+| You're close...I can feel it! Try it again. Or, type info() for more options.
+
+| Type "varEst <- var(est(ols.slope, ols.ic))" at the R prompt.
+
+> varEst <- var(est(ols.slope, ols.ic))
+
+| You are quite good my friend!
+
+  |===================================================                    |  72%
+| Now use the function all.equal to compare varChild and the sum of varRes and
+| varEst.
+
+
+all.equal(varChild, sum(varRes, varEst))
+[1] TRUE
+
+| That's not the answer I was looking for, but try again. Or, type info() for
+| more options.
+
+| Type "all.equal(varChild,varEst+varRes)" at the R prompt.
+
+> all.equal(varChild, varRes+ varEst)
+[1] TRUE
+
+| Keep working like that and you'll get there!
+
+  |=====================================================                  |  75%
+| Since variances are sums of squares (and hence always positive), this equation
+| which we've just demonstrated, var(data)=var(estimate)+var(residuals), shows
+| that the variance of the estimate is ALWAYS less than the variance of the
+| data.
+
+Since var(data)=var(estimate)+var(residuals) and variances are always
+| positive, the variance of residuals
+
+1: is greater than the variance of data
+2: is unknown without actual data
+3: is less than the variance of data
+
+Selection: 3
+
+| Excellent job!
+
+  |==========================================================             |  81%
+| The two properties of the residuals we've emphasized here can be applied to
+| datasets which have multiple predictors. In this lesson we've loaded the
+| dataset attenu which gives data for 23 earthquakes in California.
+| Accelerations are estimated based on two predictors, distance and magnitude.
+
+Generate the regression line for this data. Type efit <- lm(accel ~ mag+dist,
+| attenu) at the R prompt.
+
+> efit <- lm(accel ~ mag + dist, attenu)
+
+| You got it!
+
+  |==============================================================         |  88%
+| Verify the mean of the residuals is 0.
+
+> mean(efit$residuals)
+[1] -1.785061e-18
+
+| All that hard work is paying off!
+
+  |================================================================       |  91%
+| Using the R function cov verify the residuals are uncorrelated with the
+| magnitude predictor, attenu$mag.
+
+cov(efit$residuals, attenu$mag)
+[1] 5.338694e-17
+
+| That's correct!
+
+  |===================================================================    |  94%
+| Using the R function cov verify the residuals are uncorrelated with the
+| distance predictor, attenu$dist.
+
+
+cov(efit$residuals, attenu$dist)
+[1] 5.253433e-16
+
+| Excellent work!
+
+  |=====================================================================  |  97%
+| Congrats! You've finished the course on Residuals. We hope it hasn't left a
+| bad taste in your mouth.
+
+
+## least squares estimation
+
+```{r}
+myPlot <- function(beta){
+  y <- galton$child - mean(galton$child)
+  x <- galton$parent - mean(galton$parent)
+  freqData <- as.data.frame(table(x, y))
+  names(freqData) <- c("child", "parent", "freq")
+  plot(
+    as.numeric(as.vector(freqData$parent)), 
+    as.numeric(as.vector(freqData$child)),
+    pch = 21, col = "black", bg = "lightblue",
+    cex = .15 * freqData$freq, 
+    xlab = "parent", 
+    ylab = "child"
+  )
+  abline(0, beta, lwd = 3)
+  points(0, 0, cex = 2, pch = 19)
+  mse <- mean( (y - beta * x)^2 )
+  title(paste("beta = ", beta, "mse = ", round(mse, 3)))
+}
+manipulate(myPlot(beta), beta = manipulate::slider(0.4, .8, step = 0.02))
+```
+
+
+We learned in the last lesson that the regression line is the line through the
+| data which has the minimum (least) squared "error", the vertical distance
+| between the 928 actual children's heights and the heights predicted by the
+| line. Squaring the distances ensures that data points above and below the line
+| are treated the same. This method of choosing the 'best' regression line (or
+| 'fitting' a line to the data) is known as ordinary least squares.
+
+As shown in the slides, the regression line contains the point representing
+| the means of the two sets of heights. These are shown by the thin horizontal
+| and vertical lines. The intersection point is shown by the triangle on the
+| plot. Its x-coordinate is the mean of the parents' heights and y-coordinate is
+| the mean of the childrens' heights.
+
+As shown in the slides, the slope of the regression line is the correlation
+| between the two sets of heights multiplied by the ratio of the standard
+| deviations (childrens' to parents' or outcomes to predictors).
+
+
+Here we show code which demonstrates how changing the slope of the regression
+| line affects the mean squared error between actual and predicted values. Look
+| it over to see how straightforward it is.
+
+...
+
+  |==========================                                             |  37%
+| What RStudio graphics package allows the user to play with the data to see the
+| effects of the changes?
+
+1: points
+2: abline
+3: plot
+4: manipulate
+
+Selection: 4
+
+| You got it right!
+
+  |==============================                                         |  42%
+| Now you can actually play with the code to use R's manipulate function and
+| find the minimum squared error. You can adjust the slider with the left mouse
+| button or use the right and left arrow keys to see how changing the slope
+| (beta) affects the mean squared error (mse). If the slider disappears you can
+| call it back by clicking on the little gear in the upper left corner of the
+| plot window.
+
+...
+
+  |==================================                                     |  47%
+| Which value of the slope minimizes the mean squared error?
+
+1: .64
+2: .70
+3: .44
+4: 5
+
+Selection: 1
+
+| You are doing so well!
+
+  |=====================================                                  |  53%
+| What was the minimum mse?
+
+1: 44
+2: .66
+3: .64
+4: 5.0
+
+Selection: 4
+
+| You got it!
+
+  |=========================================                              |  58%
+| Recall that you normalize data by subtracting its mean and dividing by its
+| standard deviation. We've done this for the galton child and parent data for
+| you. We've stored these normalized values in two vectors, gpa_nor and gch_nor,
+| the normalized galton parent and child data.
+
+
+|=============================================                          |  63%
+| Use R's function "cor" to compute the correlation between these normalized
+| data sets.
+
+> cor(gpa_nor, gch_nor)
+[1] 0.4587624
+
+| Perseverance, that's the answer.
+
+  |=================================================                      |  68%
+| How does this correlation relate to the correlation of the unnormalized data?
+
+1: It is the same.
+2: It is smaller.
+3: It is bigger.
+
+Selection: 1
+
+| Keep working like that and you'll get there!
+
+  |====================================================                   |  74%
+| Use R's function "lm" to generate the regression line using this normalized
+| data. Store it in a variable called l_nor. Use the parents' heights as the
+| predictors (independent variable) and the childrens' as the predicted
+| (dependent). Remember, 'lm' needs a formula of the form dependent ~
+| independent. Since we've created the data vectors for you there's no need to
+| provide a second "data" argument as you have previously.
+
+l_nor <- lm(gch_nor ~ gpa_nor)
+
+| Your dedication is inspiring!
+
+  |========================================================               |  79%
+| What is the slope of this line?
+
+1: The correlation of the 2 data sets
+2: I have no idea
+3: 1.
+
+Selection: 1
+
+| You got it right!
+
+  |============================================================           |  84%
+| If you swapped the outcome (Y) and predictor (X) of your original
+| (unnormalized) data, (for example, used childrens' heights to predict their
+| parents), what would the slope of the new regression line be?
+
+1: I have no idea
+2: 1.
+3: correlation(X,Y) * sd(X)/sd(Y)
+4: the same as the original
+
+3
+
+Great job!
+
+  |================================================================       |  89%
+| We'll close with a final display of source code from the slides. It plots the
+| galton data with three regression lines, the original in red with the children
+| as the outcome, a new blue line with the parents' as outcome and childrens' as
+| predictor, and a black line with the slope scaled so it equals the ratio of
+| the standard deviations.
+
+```{r}
+#plot the original Galton data points with larger dots for more freq pts
+y <- galton$child
+x <- galton$parent
+freqData <- as.data.frame(table(galton$child, galton$parent))
+names(freqData) <- c("child", "parent", "freq")
+plot(as.numeric(as.vector(freqData$parent)), 
+     as.numeric(as.vector(freqData$child)), 
+     pch = 21, col = "black", bg = "lightblue",
+     cex = .07 * freqData$freq, xlab = "parent", ylab = "child")
+
+#original regression line, children as outcome, parents as predictor
+abline(mean(y) - mean(x) * cor(y, x) * sd(y) / sd(x), #intercept
+       sd(y) / sd(x) * cor(y, x),  #slope
+       lwd = 3, col = "red")
+
+#new regression line, parents as outcome, children as predictor
+abline(mean(y) - mean(x) * sd(y) / sd(x) / cor(y, x), #intercept
+       sd(y) / cor(y, x) / sd(x), #slope
+       lwd = 3, col = "blue")
+#referans axis line x yerine y oldugu icin 1/variable diye bakman lazim aslinda.
+# cunku yeni bir plot'ta degil ayni plot'un uzerinde ciziyor.
+
+#assume correlation is 1 so slope is ratio of std deviations
+abline(mean(y) - mean(x) * sd(y) / sd(x), #intercept
+       sd(y) / sd(x),  #slope
+       lwd = 2)
+points(mean(x), mean(y), cex = 2, pch = 19) #big point of intersection
+```
+
+
