@@ -1,0 +1,74 @@
+---
+title: "Regression Modelling Week 2"
+author: "Yigit Ozan Berk"
+date: "7/10/2019"
+output: html_document
+---
+
+# Statistical Linear Regression Models
+
+Up to this point, we’ve only considered estimation. Estimation is useful, but we also need to know how to extend our estimates to a population. This is the process of statistical inference. Our approach to statistical inference will be through a statistical model. At the bare minimum, we need a few distributional assumptions on the errors. However, we’ll focus on full model assumptions under Gaussianity.
+
+
+notes on the paper sheet
+
+## linear regression for prediction
+
+example from 'diamond' data set from UsingR
+
+```{r}
+library(UsingR)
+data(diamond)
+library(ggplot2)
+g <- ggplot(diamond, aes(x = carat, y = price))
+g <- g + xlab("Mass (carats)")
+g <- g + ylab("Price (SIN $)")
+g <- g + geom_point(size = 6, colour = "black", alpha = 0.2)
+g <- g + geom_point(size = 5, colour = "blue", alpha = 0.2)
+#black background and blue top colour
+g <- g + geom_smooth(method = "lm", colour = "black")
+#assumes y as outcome, x as predictor
+g
+
+```
+
+```{r}
+fit <- lm(price ~ carat, data = diamond)
+coef(fit)
+```
+
+we estimate an expected `r round(coef(fit)[2], 2)` (SIN) $ for every carat increase in mass of diamond.
+
+```{r}
+summary(fit)
+```
+
+```{r}
+#mean centering
+fit2 <- lm(price ~ I(carat - mean(carat)), data = diamond)
+#if you want mathmatical functions within lm function, you have to surround them in the I() function
+coef(fit2)
+```
+
+500 SIN $ is the average price for the average sized diamond which is about X = 0.2.
+
+```{r}
+#changing units of slope to 1/10 of a carat
+fit3 <- lm(price ~ I(carat * 10), data = diamond)
+coef(fit3)
+```
+
+```{r}
+#predicting the price
+newx <- c(0.16, 0.27, 0.34)
+coef(fit)[1] + coef(fit)[2]*newx
+
+```
+```{r}
+predict(fit, newdata = data.frame(carat = newx))
+#takes output from several different prediction models
+# if you don't use the newdata variable, it predicts yhat values of the original x values in the model 'fit'
+```
+
+
+
