@@ -71,4 +71,213 @@ predict(fit, newdata = data.frame(carat = newx))
 ```
 
 
+# Residuals
+
+Residuals represent variation left unexplained by our model. We emphasize the difference between residuals and errors. The errors unobservable true errors from the known coefficients, while residuals are the observable errors from the estimated coefficients. In a sense, the residuals are estimates of the errors.
+
+Diamond data set from UsingR
+
+```{r}
+library(UsingR)
+data(diamond)
+library(ggplot2)
+
+g <- ggplot(diamond, aes(x = carat, y = price))
+g <- g + xlab("Mass (carats)")
+g <- g + ylab("Price (SIN $)")
+g <- g + geom_point(size = 6, colour = "black", alpha = 0.2)
+g <- g + geom_point(size = 5, colour = "blue", alpha = 0.2)
+#black background and blue top colour
+g <- g + geom_smooth(method = "lm", colour = "black")
+#assumes y as outcome, x as predictor
+g
+```
+
+The variation around the regression line is the residual variation.
+
+The distances that make up the residual variation are called the residuals
+
+notes on papersheet
+
+```{r}
+y <- diamond$price; x <- diamond$carat ; n <- length(y)
+fit <- lm(y ~ x)
+e <- resid(fit)
+yhat <- predict(fit)
+#ifyou don't give the prediction function no new data, it will predict at the observed x values.
+max(abs(e - (y - yhat)))
+max(abs(e - (y - coef(fit)[1] - coef(fit)[2]*x)))
+```
+
+```{r}
+sum(e)
+#close enough to zero
+```
+
+```{r}
+sum(e * x)
+#close enough to zero
+```
+
+```{r}
+plot(diamond$carat, diamond$price,
+     xlab = "Mass (carats)",
+     ylab = "Price( SIN $",
+     bg = "lightblue",
+     col = "black", cex = 1.1, pch = 21, frame = FALSE)
+abline(fit, lwd = 2)
+for(i in 1 : n)
+        lines(c(x[i], x[i]), c(y[i], yhat[i]), col = "red", lwd = 2)
+```
+
+
+my residuals are the red lines. the distances
+
+if point is above the residual is positive, if below the residual is negative.
+
+plotting residuals ~ mass
+
+```{r}
+plot(x, e,
+     xlab = "Mass(carats)",
+     ylab = "Residuals(SIN $)",
+     bg = "lightblue",
+     col = "black", cex =2, pch = 21, frame = F)
+abline(h = 0, lwd = 2)
+for (i in 1:n)
+        lines(c(x[i], x[i]), c(e[i], 0), col = "red", lwd = 2)
+```
+
+from this plot we can see that there were a lot of diamonds with the same mass.
+
+
+
+```{r}
+x <- runif(100, -3, 3); y <- x + sin(x)+ rnorm(100, sd = .2);
+g <- ggplot(data.frame(x = x, y = y), aes(x = x , y = y))
+g <- g + geom_smooth(method = "lm", colour = "black")
+g <- g + geom_point(size = 7, colour = "black", alpha = 0.4)
+g <- g + geom_point(size = 5, colour = "red", alpha = 0.4)
+g
+```
+
+
+this is not the correct model for this data.
+
+there is a linear trend in the data, but the line is not accounting only for the non-linear trend in the data.
+
+you can get meaningful information about trends from incorrect models. the goal is not finding the exact correct model in regression.
+
+```{r}
+g <- ggplot(data.frame(x =x , y = resid(lm(y ~ x))), aes(x = x, y = y))
+g <- g + geom_hline(yintercept = 0, size = 2)
+g <- g + geom_point(size = 7, colour = "black", alpha = 0.4)
+g <- g + geom_point(size = 5, colour = "red", alpha = 0.4)
+g <- g + xlab("X") + ylab("Residual")
+g
+```
+
+
+
+now the sin trend is extremely apparent
+
+```{r}
+# Heteroskedasticity
+x <- runif(100, 0 , 6); y <- x + rnorm(100, mean = 0, sd = 0.001*x);
+g <- ggplot(data.frame(x = x, y = y), aes(x = x , y = y))
+g <- g + geom_smooth(method= "lm", colour = "black")
+g <- g + geom_point(size  =7, colour = "black", alpha = 0.4)
+g <- g + geom_point(size = 5, colour = "red", alpha = 0.4)
+g
+```
+
+difficult to see in the plot.
+
+```{r}
+#getting rid of the blank space can be helpful
+g <- ggplot(data.frame(x = x, y = resid(lm(y ~ x))),
+            aes(x = x, y = y))
+g <- g + geom_hline(yintercept = 0, size  =2)
+g <- g + geom_point(size  = 7, colour = "black", alpha = 0.4)
+g <- g + geom_point(size =  5, colour = "red", alpha = 0.4)
+g <- g + xlab("X") + ylab( "Residual")
+g
+```
+
+here it is apparent.
+
+heteroskedasticity is one of those things residuals plot is finding out
+
+you couldn't see it on the regression plot.
+
+```{r}
+#let's add the residual plot of the diamond data
+diamond$e <- resid(lm(price ~ carat , data = diamond))
+g <- ggplot(diamond, aes(x = carat, y = e))
+g <- g + xlab("Mass (carats)")
+g <- g + ylab("Residual price (SIN$")
+g <- g + geom_hline(yintercept = 0, size = 2)
+g <- g + geom_point(size = 7, colour = "black", alpha = 0.5)
+g <- g + geom_point(size = 5, colour = "blue", alpha = 0.2)
+g
+```
+
+residuals have the same unit as the outcome
+
+there doesn't appear a pattern. it's good. looks random.
+
+
+
+```{r}
+e <- c(resid(lm(price ~ 1, data = diamond)),
+       resid(lm(price ~ carat, data = diamond)))
+#first residual vector is the one where you just fit in an intercept
+#residuals are the deviatios from the average price
+#second one is the variation around the regression line.
+fit <- factor(c(rep("Itc", nrow(diamond)),
+                rep("Itc, slope", nrow(diamond))))
+#factor variable that labels the set of residuals
+g <- ggplot(data.frame(e = e, fit = fit), aes(y = e, x = fit, fill = fit))
+g <- g + geom_dotplot(binaxis = "y", size = 2, stackdir = "center", binwidth =  20)
+g<- g + xlab("Fitting approach")
+g <- g + ylab("Residual price")
+g
+
+```
+
+
+# Residual variance
+
+```{r}
+data(diamond)
+y <- diamond$price; x<- diamond$carat; n <- length(y)
+fit <- lm(y ~ x)
+summary(fit)$sigma
+#residual st dev estimate
+```
+
+```{r}
+sqrt(sum(resid(fit)^2)/(n - 2))
+#confirmed with 46 degrees of freedom
+```
+R squared can be a misleading summary of model fit.
+
+
+```{r}
+data(anscombe)
+example(anscombe)
+```
+
+same mean and variance of X and Y
+identical correlations(hence same R^2)
+same linear regression relationship.
+
+BUT the models are significantly different.
+
+1st plot - just a normal x and y relationship and regression.
+2nd plot - there's clearly a missing term to explain the curvature
+3rd plot - there's an outlier
+4th plot - all data are at one value, and there is another value at the far end
+
+
 
