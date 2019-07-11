@@ -281,3 +281,87 @@ BUT the models are significantly different.
 
 
 
+# Inference in Regression
+
+Inference is the process of drawing conclusions about a population using a sample. In statistical inference, we must account for the uncertainty in our estimates in a principled way. Hypothesis tests and confidence intervals are among the most common forms of statistical inference.
+
+These statements apply generally, and, of course, to the regression setting that we've been studying. In the next few lectures, we'll cover inference in regression where we make some Gaussian assumptions about the errors.
+
+```{r}
+library(UsingR); data(diamond)
+y <- diamond$price; x<- diamond$carat; n <- length(y)
+beta1 <- cor(y,x)*sd(y)/sd(x)
+#theoretical beta1
+beta0 <- mean(y) - beta1 *mean(x)
+#theoretical beta0
+e <- y - beta0 - beta1*x
+#residuals
+sigma <- sqrt(sum(e^2)/(n-2))
+#variability around the regression line
+ssx <- sum((x - mean(x))^2)
+#sums of squares of xs
+seBeta0 <- (1/n + mean(x)^2 / ssx) ^ .5 * sigma
+#standard error for Beta0
+seBeta1 <- sigma/sqrt(ssx)
+#standard error for Beta1
+tBeta0 <- beta0 / seBeta0
+#divided by its standard error
+#t statistic that beta1 is zero or beta0 is zero
+#we don't have to subtract the true value because the true value is accepted as zero under this hypothesis
+#test of a 0 intercept. usually not very interesting
+tBeta1 <- beta1 / seBeta1
+#divided by its standard error
+#t statistic that beta1 is zero or beta0 is zero
+#we don't have to subtract the true value because the true value is accepted as zero under this hypothesis
+#test of a 0 slope. this is the important part
+pBeta0 <- 2 * pt(abs(tBeta0), df = n-2, lower.tail = FALSE)
+#twice my t probability
+pBeta1 <- 2 * pt(abs(tBeta1), df = n-2, lower.tail = FALSE)
+coefTable <- rbind(c(beta0, seBeta0, tBeta0, pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
+colnames(coefTable) <- c("Estimate", "Std.Error", "t value", "P(>|t|)")
+rownames(coefTable) <- c("(Intercept)", "x")
+coefTable
+```
+
+Note : 
+The t statistic is a measure of how extreme a statistical estimate is. You compute this statistic by subtracting the hypothesized value from the statistical estimate and then dividing by the estimated standard error. In many, but not all situation, the hypothesized value would be zero.
+
+You have an indication that the hypothesized value is reasonable when the t-statistic is close to zero.  Alternately, you have an indication that the hypothesized value is not large enough when the t-statistic is large positive. Finally, you have an indication that the hypothesized value is too large when the t-statistic is large negative.
+
+```{r}
+coefTable
+fit <- lm(y ~ x)
+summary(fit)$coefficients
+```
+
+```{r}
+summary(fit)
+```
+
+confidence intervals for our intercept and slope
+
+```{r}
+sumCoef <- summary(fit)$coefficients
+sumCoef
+```
+
+
+confidence intervals
+```{r}
+sumCoef[1,1] + c(-1, 1) * qt(.975, df = fit$df) * sumCoef[1,2]
+#estimate +- .975th t quantile * st. error
+sumCoef[2,1] + c(-1, 1) * qt(.975, df = fit$df) * sumCoef[2,2]
+#estimate +- .975th t quantile * st. error
+
+```
+
+the slope is going to be interpreted in change in sNG dollar price per one mass increase in carat. But I might want it for a 0.1 increase. 1 carat increase is a big increase
+
+```{r}
+(sumCoef[1,1] + c(-1, 1) * qt(.975, df = fit$df) * sumCoef[1,2]) / 10
+#estimate +- .975th t quantile * st. error / 10 (for slope * 0.1 units)
+(sumCoef[2,1] + c(-1, 1) * qt(.975, df = fit$df) * sumCoef[2,2]) / 10
+#estimate +- .975th t quantile * st. error / 10 (for slope * 0.1 units)
+```
+
+with 95% confidence we estimate that a 0.1 carat increase in diamond size is going to result in 355 to 388 increase in price in SNG $.
