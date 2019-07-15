@@ -365,3 +365,47 @@ the slope is going to be interpreted in change in sNG dollar price per one mass 
 ```
 
 with 95% confidence we estimate that a 0.1 carat increase in diamond size is going to result in 355 to 388 increase in price in SNG $.
+
+# Prediction
+
+Prediction is a central concept for the data scientist. 
+The entire course, Practical Machine Learning is on advanced prediction techniques.
+
+```{r}
+library(ggplot2)
+newx <- data.frame(x = seq(min(x), max(x), length = 100))
+p1 <- data.frame(predict(fit, newdata = newx, interval = ("confidence")))
+#the predict function has the output of lm. some new x values(more dense). interval = ("confidence") means: "I want the interval around the estimated line at that particular value of x. not for a potential new y at that particular value of x.
+# if you want the particular values of y around the estimated line, then you pick interval = ("prediction")
+p2 <- data.frame(predict(fit, newdata = newx, interval = ("prediction")))
+p1$interval = "confidence"
+p2$interval = "prediction"
+p1$x = newx$x
+p2$x = newx$x
+dat = rbind(p1, p2)
+names(dat)[1] = "y"
+
+g = ggplot(dat, aes(x = x, y = y))
+g = g + geom_ribbon(aes(ymin = lwr, ymax = upr, fill = interval), alpha = 0.2)
+#ribbon has 2 parts. because it is going to be filled by the interval types. blue is the prediction interval
+g = g + geom_line()
+#the fitted line
+g = g + geom_point(data = data.frame(x = x, y =y), aes(x = x, y = y), size = 4)
+#observed data points are not in the data frame that I used to create the ggplot, so I have to give it a new data frame and a new aes
+g
+```
+
+
+salmon is the confidence interval for the line. blue is the prediction interval. 
+
+ozet = the leftover residual variation of my regression line is kinda the main source of the prediction interval being larger than the confidence interval. there's some uncertainty that doesn't go away with better estimation.
+
+# Swirl
+
+- Residual Variation
+- Introduction to Multivariable Regression
+- MultiVar Examples
+
+## Residual Variation
+
+
