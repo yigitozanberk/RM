@@ -10,7 +10,10 @@ output: html_document
 - adjustment
 - residuals again
 - model selection
-- swirl excercises
+- swirl excercises :
+multivar examples 2
+multivar examples 3
+residual diagnostics and variation
 - practice exercise in regression modeling
 
 # Multivariable regression
