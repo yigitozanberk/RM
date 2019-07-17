@@ -1,0 +1,62 @@
+---
+title: "Regression Modeling Week 3"
+author: "Yigit Ozan Berk"
+date: "7/17/2019"
+output: html_document
+---
+
+- multivariable regression
+- multivariable regression tips and tricks
+- adjustment
+- residuals again
+- model selection
+- swirl excercises
+- practice exercise in regression modeling
+
+# Multivariable regression
+
+if you have lots and lots and lots of variables, you may find a "related" regressor by chance. That's the problem of multiplicity. Keep that in mind. 
+
+multivariable regression tries to look at the relationship of a predictor and a response, while having, at some level, accounted for other variables.
+
+smoker - mint usage - lung function example. you have to keep the smoker status constant to see if mint usage *really* has an effect on lung function
+
+
+CAGO competition
+
+multivariable regression is also a great predictor.
+
+simple linear regression is not equipped to handle more than one predictor.
+
+model selection strategies, avoiding overfitting
+
+multivariable prediction is a pretty good starting point.
+
+- what are the consequences of adding lots of regressors? overfitting. zero residuals.
+
+```{r}
+set.seed(100)
+n = 100; x = rnorm(n); x2 = rnorm(n) ; x3 = rnorm(n)
+y = 1 + x + x2 + x3 + rnorm(n, sd = .1)
+ey = resid(lm(y ~ x2 + x3))
+ex = resid(lm(x ~ x2 + x3))
+#remember lm by default takes an intercept.
+sum(ey * ex) / sum(ex ^ 2)
+coef(lm(ey ~ ex - 1))
+coef(lm(y ~ x + x2 + x3))
+```
+
+x term is exactly the same with regression through origin estimate with the residuals
+
+
+- linears models are the single most important applied statistical and machine learning technique, by far.
+
+some amazing things that you can accomplish with linear models:
+
+- decompose a signal into its harmonics
+- flexibly fit complicated functions
+- fit factor variables as predictors
+- uncover complex multivariate relationships with the response
+- build accurate prediction models.
+
+
