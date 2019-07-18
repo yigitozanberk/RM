@@ -1262,3 +1262,22 @@ summary(lm(mpg ~ hp, data = mtcars))$coef
 
 p value of the slope is 1 * 10^(-7). this is smaller than alpha = 0.05. Therefore we reject the null hypothesis that there is no relationship between hp and mpg(or that the slope is equal to zero).
 
+# chapter 6, q 4
+
+```{r}
+data(mtcars)
+fit = lm(mpg ~ hp, data = mtcars)
+temp = mtcars; temp$resid = resid(fit)
+g = ggplot(temp, aes(x = hp, y = resid))
+g = g + geom_hline(yintercept = 0, col = "red")
+g = g + geom_point(alpha = .5, cex = 5)
+g
+```
+
+```{r}
+qplot(mpg, hp , data = mtcars)
+```
+
+there's some non-linearity. we should add a X^2 term.
+
+
