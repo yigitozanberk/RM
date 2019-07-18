@@ -62,4 +62,151 @@ some amazing things that you can accomplish with linear models:
 - uncover complex multivariate relationships with the response
 - build accurate prediction models.
 
+# Multivariable regression tips and tricks
 
+Swiss data set
+
+```{r}
+require(datasets)
+data(swiss)
+?swiss
+```
+
+what explains fertility in this province?
+
+```{r}
+install.packages("GGally")
+require(GGally)
+#add on tools for ggplot
+require(ggplot2)
+my_fn <- function(data, mapping, method="loess", ...){
+      p <- ggplot(data = data, mapping = mapping) + 
+      geom_point() + 
+      geom_smooth(method=method, ...)
+      p
+    }
+
+# Default loess curve    
+g = ggpairs(swiss[1:4], lower = list(continuous = wrap(my_fn, method="loess")))
+g
+```
+
+
+(Check the GGally package)
+
+```{r}
+summary(lm(Fertility ~ ., data = swiss))$coefficients
+#period means all the variables. (linearly)
+#all variables are in terms of percentages
+```
+
+interpretation:
+
+(for Agriculture)
+estimate: we expect a 0.17 decrease (because it's negative) in standardized fertility for every 1% increase in percentage of males involved in agriculture in holding the remaining variables constant.
+
+std. error: the statistical variability of the coefficient.
+
+testing H_0 : beta_agri = 0 versus H_a : beta_agri != 0
+take the estimate: -0.1721140 
+subtract off the hypothesized value : -0.1721149 - 0
+divide by the std. error of the estimate : (-0.1721149 - 0)/0.07030392
+this is the t statistic!
+
+we could calculate the probability of getting a t statistic as extreme as that.
+
+```{r}
+sumCoef <- summary(lm(Fertility ~ ., data = swiss))$coefficients
+pt(sumCoef[2,3], 41)
+#degrees of freedom is n - numberOfCoefficients = 41 (5 variable + 1 intercept)
+```
+
+```{r}
+#double the t value for two sided result
+pt(sumCoef[2,3], 41) * 2
+```
+
+```{r}
+#this is the same as the 4th column!
+sumCoef[2,4]
+```
+
+
+
+Let's go through some other models, and see how the process of model selection changes our estimates.
+
+```{r}
+summary(lm(Fertility ~ Agriculture, data = swiss))$coefficients
+```
+
+```{r}
+summary(lm(Fertility ~ Agriculture, data = swiss))
+```
+
+The coefficient changed signes.
+
+This is the impact of Simpson's *Perceived* Paradox.
+
+Regression is a dynamic process, you have to think about which variables to include.
+
+If there hasn't been a randomization process done to protect you from confounding: 
+You have to go through a scientific dynamic process of putting confounders in and out and thinking about what they are doing to your effective interest in order to evaluate it.
+
+```{r}
+n = 100; x2 = 1:n; x1 = .01 * x2 + runif(n, -.1, .1); y = -x1 + x2 + rnorm(n, sd = .01)
+# x1 grows linearly with x2, also has some random noise
+# y is negatively associated with x1. positively associated with x2. and has random noise
+summary(lm(y ~ x1))$coef
+summary(lm(y ~ x1 + x2))$coef
+```
+
+it's sort of picking up the residual effect of x2 in x1 in the first model. if we fit the correct model, we get the correct coefficients.
+
+what is regression doing(in the second model)? it's taking x1, and removing the linear effect of x2. then looking at the  correlation.
+
+
+```{r}
+dat = data.frame(y = y, x1 = x1, x2 = x2, ey = resid(lm(y ~ x2)), ex1 = resid(lm(x1 ~ x2)))
+g = ggplot(dat, aes(y = y, x= x1, colour = x2))
+g = g + geom_point(colour = "grey50", size = 5) + geom_smooth(method = lm, se = FALSE, colour = "black") + geom_point(size = 4)
+g
+```
+
+there is clearly positive relationship at first look. but you can also see that x2 is also positively related with y. so there is confounding. that's what's happening here.
+
+let's see what happens if we plot the residuals
+
+```{r}
+g2 = ggplot(dat, aes(y = ey, x = ex1, colour= x2))
+g2 = g2 + geom_point(colour = "grey50", size = 5) + geom_smooth(method = lm, se = FALSE, colour = "black") + geom_point(size = 4)
+g2
+```
+
+you can see that for the residual y and residual x1, there's a clear negative relationship. and the slope is roughly -1.
+
+x2 variable is clearly not related to residual x1 variable.
+
+the linear model is removing the x2 from both x1 and y. and that's why you get this correct relationship here.
+
+This doesn't mean throwing every variable into your model is correct. there's consequences to throwing in extra variables. unnecessary variables.
+
+
+### back to the swiss dataset
+
+- the sign(of Agriculture) reverses itself with the inclusion of Examination and Education
+- the percent of males in the province working in agriculture is negatively related to educational attainment (correlation of -0.6395) and Education and Examination (correlation of 0.6984) are obviously measuring similar things.
+
+- is the positive marginal an artifact for not having accounted for these other variables? (Education does have a stronger effect on fertility by the way)
+
+- at the minimum, anyone claiming that provinces that are more agricultural have higher fertility rates would immediately be open to criticism.
+
+
+what happens if you include a *completely unnecessary* variable to the model?
+(not a random noise)
+
+```{r}
+z <- swiss$Agriculture + swiss$Education
+lm(Fertility ~ . + z, data = swiss)
+```
+
+if you see an NA in R after you fit a linear model, most likely reason is because it is either numerically or exactly a linear combination of the other variables.
