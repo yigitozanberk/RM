@@ -337,5 +337,343 @@ perhaps taking logs of the counts would help.
 
 we'll cover Poisson GLMs for fitting count data later on.
 
+ANCOVA example
+
+```{r}
+library(dplyr)
+library(datasets) ; data(swiss)
+head(swiss)
+```
+
+### dealing with bimodal variables
+
+```{r}
+hist(swiss$Catholic)
+```
+
+
+majority catholic or majority protestant. very bimodal
+
+```{r}
+swiss = mutate(swiss, CatholicBin = 1 * (Catholic > 50))
+
+#here we are making the province fully catholic if the majority is catholic, or visa versa. and this truly makes the variable with two levels.(factor variable)
+head(swiss)
+```
+
+```{r}
+# ders notlari: RM W3 23/7/19
+library(ggplot2)
+g = ggplot(swiss, aes(x = Agriculture, y = Fertility, colour = factor(CatholicBin)))
+g = g + geom_point(size = 6, colour = "black") + geom_point(size = 4)
+g  = g + xlab("% in Agriculture") + ylab("Fertility")
+g
+```
+
+there are some potential issues here because of the outliers. it will be dealt with in a future class. these are ignored for the time being.
+
+there will be two separate lines. for catholics and protestants.
+
+Model:
+
+Y = Fertility
+X_1 = Agriculture
+X_2 = { 1, for over 50% Catholic
+        0, otherwise}
+        
+```{r}
+#first model
+fit = lm(Fertility ~ Agriculture, data = swiss)
+g1 = g
+g1 = g1 + geom_abline(intercept = coef(fit)[1], slope = coef(fit)[2], size = 2)
+g1
+# the first model doesn't include religion at all
+```
+
+```{r}
+summary(fit)$coef
+```
+
+```{r}
+#second model
+fit2 = lm(Fertility ~ Agriculture + factor(CatholicBin), data = swiss)
+summary(fit2)$coef
+#because the value of CatholicBin is either 0 or 1, you don't have to call factor(CatholicBin), but it's appropriate for context. if there is even one more different value, R is going to treat it as a continuous regressor, and it will distrupt the regression.
+```
+change in the intercept by CatholicBin variable is estimated as 7.88 with std. error of 3.7483 within the 95 confidence interval.
+
+```{r}
+g2 = g
+g2 = g2 + geom_abline(intercept = coef(fit2)[1], slope = coef(fit2)[2], size = 2)
+g2 = g2 + geom_abline(intercept = coef(fit2)[1] + coef(fit2)[3], slope = coef(fit2)[2], size = 2)
+g2
+
+```
+
+```{r}
+#third model
+fit3 = lm(Fertility ~ Agriculture * factor(CatholicBin), data = swiss)
+summary(fit3)$coef
+#what does the asteriks do?
+# this is our third model. agriculture slope is the mostly protestant provinces. the agriculture:factor(cath..) slope is the mostly catholic provinces.
+# when you add the asteriks, it automatically fits the interaction plus all the main effects. (intercept, agriculture, factor(CatholicBin), agriculture:factor(catholicBin))
+
+```
+```{r}
+g3 = g
+g3 = g3 + geom_abline(intercept = coef(fit3)[1], slope = coef(fit3)[2], size = 2)
+g3 = g3 + geom_abline(intercept = coef(fit3)[1] + coef(fit3)[3], 
+                      slope = coef(fit3)[2] + coef(fit3)[4],
+                      size = 2)
+g3
+```
+
+for the blue dots, it's not clear what the low left corner blue dots mean, but it's for the following lectures.
+
+# Adjustment
+
+Adjustment, is the idea of putting regressors into a linear model to investigate the role of a third variable on the relationship between another two. Since it is often the case that a third variable can distort, or confound if you will, the relationship between two others.
+
+As an example, consider looking at lung cancer rates and breath mint usage. For the sake of completeness, imagine if you were looking at forced expiratory volume (a measure of lung function) and breath mint usage. If you found a statistically significant regression relationship, it wouldn’t be wise to rush off to the newspapers with the headline “Breath mint usage causes shortness of breath!”, for a variety of reasons. First off, even if the association is sound, you don’t know that it’s causal. But, more importantly in this case, the likely culprit is smoking habits. Smoking rates are likely related to both breath mint usage rates and lung function. How would you defend your finding against the accusation that it’s just variability in smoking habits?
+
+If your finding held up among non-smokers and smokers analyzed separately, then you might have something. In other words, people wouldn’t even begin to believe this finding unless it held up while holding smoking status constant. That is the idea of adding a regression variable into a model as adjustment. The coefficient of interest is interpreted as the effect of the predictor on the response, holding the adjustment variable constant.
+
+In this lecture, we’ll use simulation to investigate how adding a regressor into a model addresses the idea of adjustment.
+
+
+
+```{r}
+n <- 100; t <- rep(c(0, 1), c(n/2, n/2)); x <- c(runif(n/2), runif(n/2));
+beta0 <- 0; beta1 <- 2; tau <- 1; sigma <- .2
+y <- beta0 + x * beta1 + t * tau + rnorm(n, sd = sigma)
+plot(x, y, type = "n", frame = FALSE)
+abline(lm(y ~ x), lwd = 2)
+abline(h = mean(y[1 : (n/2)]), lwd = 3)
+abline(h = mean(y[(n/2 + 1) : n]), lwd = 3)
+fit <- lm(y ~ x + t)
+abline(coef(fit)[1], coef(fit)[2], lwd = 3)
+abline(coef(fit)[1] + coef(fit)[3], coef(fit)[2], lwd = 3)
+points(x[1 : (n/2)], y[1 : (n/2)], pch = 21, col = "black", bg = "lightblue", cex = 2)
+points(x[(n/2 + 1) : n], y[(n/2 + 1) : n], pch = 21, col = "black", bg = "salmon", cex = 2)
+```
+
+
+
+
+### Simulation 1
+
+{r, fig.height=5, fig.width=5, echo = FALSE, results='hide'}
+
+```{r}
+n <- 100; t <- rep(c(0, 1), c(n/2, n/2)); x <- c(runif(n/2), runif(n/2));
+beta0 <- 0; beta1 <- 2; tau <- 1; sigma <- .2
+y <- beta0 + x * beta1 + t * tau + rnorm(n, sd = sigma)
+plot(x, y, type = "n", frame = FALSE)
+abline(lm(y ~ x), lwd = 2)
+abline(h = mean(y[1 : (n/2)]), lwd = 3)
+abline(h = mean(y[(n/2 + 1) : n]), lwd = 3)
+fit <- lm(y ~ x + t)
+abline(coef(fit)[1], coef(fit)[2], lwd = 3)
+abline(coef(fit)[1] + coef(fit)[3], coef(fit)[2], lwd = 3)
+points(x[1 : (n/2)], y[1 : (n/2)], pch = 21, col = "black", bg = "lightblue", cex = 2)
+points(x[(n/2 + 1) : n], y[(n/2 + 1) : n], pch = 21, col = "black", bg = "salmon", cex = 2)
+```
+
+horizontal lines show the marginal effect of group status, disregarding x (red and blue groups) upper line would be the mean for red group, lower line would be the mean for blue group
+
+but there's a pretty clear linear relationship between the outcome and the regressor.
+
+Y = beta_0 + beta_1 * T + beta_2 * X + e
+
+
+
+### Some things to note in this simulation
+* The X variable is unrelated to group status
+* The X variable is related to Y, but the intercept depends
+  on group status.
+* The group variable is related to Y.
+  * The relationship between group status and Y is constant depending on X.
+  * The relationship between group and Y disregarding X is about the same as holding X constant
+
+
+### Simulation 2
+
+```{r}
+n <- 100; t <- rep(c(0, 1), c(n/2, n/2)); x <- c(runif(n/2), 1.5 + runif(n/2));
+beta0 <- 0; beta1 <- 2; tau <- 0; sigma <- .2
+y <- beta0 + x * beta1 + t * tau + rnorm(n, sd = sigma)
+plot(x, y, type = "n", frame = FALSE)
+abline(lm(y ~ x), lwd = 2)
+abline(h = mean(y[1 : (n/2)]), lwd = 3)
+abline(h = mean(y[(n/2 + 1) : n]), lwd = 3)
+fit <- lm(y ~ x + t)
+abline(coef(fit)[1], coef(fit)[2], lwd = 3)
+abline(coef(fit)[1] + coef(fit)[3], coef(fit)[2], lwd = 3)
+points(x[1 : (n/2)], y[1 : (n/2)], pch = 21, col = "black", bg = "lightblue", cex = 2)
+points(x[(n/2 + 1) : n], y[(n/2 + 1) : n], pch = 21, col = "black", bg = "salmon", cex = 2)
+```
+massive treatment effect, but nothing if you count X. ("propensity score")
+
+
+
+### Some things to note in this simulation
+* The X variable is highly related to group status
+* The X variable is related to Y, the intercept
+  doesn't depend on the group variable.
+  * The X variable remains related to Y holding group status constant
+* The group variable is marginally related to Y disregarding X.
+* The model would estimate no adjusted effect due to group.
+  * There isn't any data to inform the relationship between
+    group and Y.
+  * This conclusion is entirely based on the model.
+  
+this is what makes observational data analysis very hard compared to randomized trials.
+
+
+### Simulation 3
+
+```{r}
+n <- 100; t <- rep(c(0, 1), c(n/2, n/2)); x <- c(runif(n/2), .9 + runif(n/2));
+beta0 <- 0; beta1 <- 2; tau <- -1; sigma <- .2
+y <- beta0 + x * beta1 + t * tau + rnorm(n, sd = sigma)
+plot(x, y, type = "n", frame = FALSE)
+abline(lm(y ~ x), lwd = 2)
+abline(h = mean(y[1 : (n/2)]), lwd = 3)
+abline(h = mean(y[(n/2 + 1) : n]), lwd = 3)
+fit <- lm(y ~ x + t)
+abline(coef(fit)[1], coef(fit)[2], lwd = 3)
+abline(coef(fit)[1] + coef(fit)[3], coef(fit)[2], lwd = 3)
+points(x[1 : (n/2)], y[1 : (n/2)], pch = 21, col = "black", bg = "lightblue", cex = 2)
+points(x[(n/2 + 1) : n], y[(n/2 + 1) : n], pch = 21, col = "black", bg = "salmon", cex = 2)
+```
+there is some overlap, direct evidence. 
+
+but, it also is a hard case, because if you look, the marginal means are far, but more importantly mean_red > mean_blue. but when we fit our model, we see adjusted blue mean is higher than red = mean_blue > mean_red.
+
+This is called the simpson's paradox.
+
+
+### Some things to note in this simulation
+* Marginal association has red group higher than blue.
+* Adjusted relationship has blue group higher than red.
+* Group status related to X.
+* There is some direct evidence for comparing red and blue
+holding X fixed.
+
+
+### Simulation 4
+```{r}
+n <- 100; t <- rep(c(0, 1), c(n/2, n/2)); x <- c(.5 + runif(n/2), runif(n/2));
+beta0 <- 0; beta1 <- 2; tau <- 1; sigma <- .2
+y <- beta0 + x * beta1 + t * tau + rnorm(n, sd = sigma)
+plot(x, y, type = "n", frame = FALSE)
+abline(lm(y ~ x), lwd = 2)
+abline(h = mean(y[1 : (n/2)]), lwd = 3)
+abline(h = mean(y[(n/2 + 1) : n]), lwd = 3)
+fit <- lm(y ~ x + t)
+abline(coef(fit)[1], coef(fit)[2], lwd = 3)
+abline(coef(fit)[1] + coef(fit)[3], coef(fit)[2], lwd = 3)
+points(x[1 : (n/2)], y[1 : (n/2)], pch = 21, col = "black", bg = "lightblue", cex = 2)
+points(x[(n/2 + 1) : n], y[(n/2 + 1) : n], pch = 21, col = "black", bg = "salmon", cex = 2)
+```
+non-significant effect when we ignore X, very significant effect when we include X.
+
+### Some things to note in this simulation
+* No marginal association between group status and Y.
+* Strong adjusted relationship.
+* Group status not related to X.
+* There is lots of direct evidence for comparing red and blue
+holding X fixed.
+
+
+## Simulation 5
+```{r, fig.height=5, fig.width=5, echo = FALSE, results='hide'}
+n <- 100; t <- rep(c(0, 1), c(n/2, n/2)); x <- c(runif(n/2, -1, 1), runif(n/2, -1, 1));
+beta0 <- 0; beta1 <- 2; tau <- 0; tau1 <- -4; sigma <- .2
+y <- beta0 + x * beta1 + t * tau + t * x * tau1 + rnorm(n, sd = sigma)
+plot(x, y, type = "n", frame = FALSE)
+abline(lm(y ~ x), lwd = 2)
+abline(h = mean(y[1 : (n/2)]), lwd = 3)
+abline(h = mean(y[(n/2 + 1) : n]), lwd = 3)
+fit <- lm(y ~ x + t + I(x * t))
+abline(coef(fit)[1], coef(fit)[2], lwd = 3)
+abline(coef(fit)[1] + coef(fit)[3], coef(fit)[2] + coef(fit)[4], lwd = 3)
+points(x[1 : (n/2)], y[1 : (n/2)], pch = 21, col = "black", bg = "lightblue", cex = 2)
+points(x[(n/2 + 1) : n], y[(n/2 + 1) : n], pch = 21, col = "black", bg = "salmon", cex = 2)
+```
+
+Y = beta_0 + beta_1 * T + beta_2 * X + beta_3 * T * X + e
+there is not beta_1 treatment effect for this data. the outcome depends on X. 
+
+---
+## Discussion
+### Some things to note from this simulation
+* There is no such thing as a group effect here.
+  * The impact of group reverses itself depending on X.
+  * Both intercept and slope depends on group.
+* Group status and X unrelated.
+  * There's lots of information about group effects holding X fixed.
+  
+  
+  
+### Simulation 6
+```{r, fig.height=5, fig.width=5, echo = FALSE, results='hide'}
+p <- 1
+n <- 100; x2 <- runif(n); x1 <- p * runif(n) - (1 - p) * x2
+beta0 <- 0; beta1 <- 1; tau <- 4 ; sigma <- .01
+y <- beta0 + x1 * beta1 + tau * x2 + rnorm(n, sd = sigma)
+plot(x1, y, type = "n", frame = FALSE)
+abline(lm(y ~ x1), lwd = 2)
+co.pal <- heat.colors(n)
+points(x1, y, pch = 21, col = "black", bg = co.pal[round((n - 1) * x2 + 1)], cex = 2)
+```
+
+---
+### Do this to investigate the bivariate relationship
+```
+library(rgl)
+plot3d(x1, x2, y)
+```
+
+On MacOS, rgl depends on XQuartz, which you can download from xquartz.org.
+3 dimensional plots are difficult to work with, but we can look at the residuals instead.
+
+
+---
+### Residual relationship
+```{r, fig.height=5, fig.width=5, echo = FALSE, results='hide'}
+plot(resid(lm(x1 ~ x2)), resid(lm(y ~ x2)), frame = FALSE, col = "black", bg = "lightblue", pch = 21, cex = 2)
+abline(lm(I(resid(lm(x1 ~ x2))) ~ I(resid(lm(y ~ x2)))), lwd = 2)
+```
+
+there is a very strong relationship leftover between x1 and y after taking out x2 effects.
+
+---
+## Discussion
+### Some things to note from this simulation
+
+* X1 unrelated to X2
+* X2 strongly related to Y
+* Adjusted relationship between X1 and Y largely unchanged
+  by considering X2.
+  * Almost no residual variability after accounting for X2.
+
+---
+## Some final thoughts
+* Modeling multivariate relationships is difficult.
+* Play around with simulations to see how the
+  inclusion or exclusion of another variable can
+  change analyses.
+* The results of these analyses deal with the
+impact of variables on associations.
+  * Ascertaining mechanisms or cause are difficult subjects
+    to be added on top of difficulty in understanding multivariate associations.
+    
+we haven't said which is the right model. best way to think about that is bringing in some subject matter expertise into your model exercise.
+
+
+sometimes the treatment and the other regressor are highly related; merely because they are related is not interesting enough to adjust for x
+
+we might have systolic blood pressure in the model, and i put diastolic blood pressure in a model as well, that of course makes the first one go away. but it's not interesting. i know they are highly correlated, why should i have both of them in the model?
 
 
