@@ -210,3 +210,132 @@ lm(Fertility ~ . + z, data = swiss)
 ```
 
 if you see an NA in R after you fit a linear model, most likely reason is because it is either numerically or exactly a linear combination of the other variables.
+
+
+# Multivariable regression examples part 2
+
+```{r}
+require(datasets); data("InsectSprays");require(stats)
+library(ggplot2)
+g = ggplot(data = InsectSprays, aes(y = count, x = spray, fill = spray))
+g = g + geom_violin(colour = "black", size = 2)
+g = g + xlab("Type of spray") + ylab("Insect count")
+g
+```
+
+```{r}
+head(InsectSprays)
+```
+
+
+```{r}
+sumCoef <- summary(lm(count ~ spray , data = InsectSprays))
+sumCoef
+```
+
+Spray A is missing. so everything is in comparison to spray A.
+
+the intercept is the mean for spray A.
+
+Spray C estimate is the average difference of means of spray A and spray C. (14.5000 -12.4167)
+
+If we want to compare spray B and spray C; 0.8333 - 12.4167. That wouldn't give us standard erros immediately, but we would have estimates. !!!!!
+
+## How to pick the reference level
+
+```{r}
+sumCoef2 = summary(lm(count ~
+                        I(1 * (spray == "B")) + I(1 * (spray == "C")) + 
+                            I( 1 * (spray == "D")) + I(1 * (spray == "E")) +
+                                 I( 1 * (spray == "F")), 
+                                    data = InsectSprays))
+sumCoef2$coef
+# identical results
+```
+
+```{r}
+#taking spray B as reference level.
+sumCoef3 = summary(lm(count ~
+                        I(1 * (spray == "A")) + I(1 * (spray == "C")) + 
+                            I( 1 * (spray == "D")) + I(1 * (spray == "E")) +
+                                 I( 1 * (spray == "F")), 
+                                    data = InsectSprays))
+sumCoef3$coef
+```
+
+now we also have standard errors.
+
+## what if we include all 6?
+
+```{r}
+lm(count ~
+                        I(1 * (spray == "B")) + I(1 * (spray == "C")) + 
+                            I( 1 * (spray == "D")) + I(1 * (spray == "E")) +
+                                 I( 1 * (spray == "F")) + I(1 * (spray == "A")), 
+                                    data = InsectSprays)
+
+```
+
+it gives NA for spray A, the 6th regression parameter. because it's redundant. 
+we have 6 means for 6 parameters plus the intercept. now I have 6 means to fit seven parameters(including intercept), it can't do that so it drops one.
+
+What if I want the coefficients not to be compared to one another? the coefficients to be the mean for each group?
+
+## omitting the intercept.
+
+```{r}
+library(dplyr)
+summary(lm( count ~ spray - 1, data = InsectSprays))$coef
+```
+these are tesing wether spray A has killed any insects.(H_0 : beta_A == 0) 
+the previous models were testing whether sprayB insect kill was different from sprayA insect kill, or whether sprayC insect kill was different from sprayA insect kill.
+
+```{r}
+summarise(group_by(InsectSprays, spray), mn = mean(count))
+```
+
+now all groups are presented with their means. because the regression function now has 6 parameters and 6 means to work with.
+
+if you include the intercept to the function, the intercept becomes spray A, and the other coefficients are referenced to spray A - with standard errors.
+
+How you insert the factor variables to lm() is very important for interpretation.
+
+## reordering the levels easily = relevel()
+```{r}
+spray2 <- relevel(InsectSprays$spray, "C")
+summary(lm(count ~ spray2, data = InsectSprays))$coef
+```
+
+this is so much faster than typing in I(1 * (spray == "C")) over and over again!
+
+
+### Summary
+
+if we treat spray as a factor, R includes an intercept and omits the alphabetically first level of the factor.
+
+- all t-tests are for comparisons of sprays versus spray A
+- empirical mean for A isthe intercept
+- other group means are the itc plus their coefficient.
+
+if we omit an intercept, then it includes terms for all levels of factors
+- group mean are the coefficients
+- tests are tests of whether the groups are different than zero
+
+
+## other thoughts on this data
+
+- counts are bounded from below by 0, violates the assumption of normal data.
+it would be more natural to assume the data was poisson or at least over dispersed poisson. 
+
+the variance is clearly not constant, as our regression models would assume. so our estimates are correct but our inferences are definitely not.
+
+for more advanced topics you need more classes than this specialization tree (like for heteroscedasticity)
+
+perhaps taking logs of the counts would help. 
+
+-there are 0 counts present, so maybe log(Count + 1)
+
+we'll cover Poisson GLMs for fitting count data later on.
+
+
+
