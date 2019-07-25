@@ -883,6 +883,8 @@ abline(h = 1)
 ```
 
 
+## model selection part 2
+
 
 
 
@@ -898,7 +900,14 @@ betas <- sapply(1 : nosim, function(i){
     coef(lm(y ~ x1 + x2 + x3))[2])
 })
 round(apply(betas, 1, sd), 5)
+# the outcome only depends on x1, but if you include x2 and x3 in the regression, the standard error of the coefficients increase. this is what happens when you include gereksiz regressors.
+
+# the inflation here is negligable because x2 and x3 is not related to x1.
 ```
+
+## !!!
+
+The variance inflation occurs on the actual standard errors, not the estimated standard errors. It's actually a little complicated, in that if I put another variable into a regression model, it doesn't necessarily inflate the observed standard error. And the reason is because the variance is estimated rather than the actual variance. And that has a kind of conflicting property.So you don't necessarily see the variance go up when you include an unnecessary regressor into a regression model, you have to look at it through simulation.
 
 ---
 ## Variance inflation
@@ -913,7 +922,11 @@ betas <- sapply(1 : nosim, function(i){
     coef(lm(y ~ x1 + x2 + x3))[2])
 })
 round(apply(betas, 1, sd), 5)
+# when the unnecessary regressors depend heavily on x1, then you have a very high inflation of variation.
 ```
+
+if the variable that you include is highly correlated to the thing you're interested in, you're going to inflate the variance more.
+ 
 
 
 ---
@@ -952,11 +965,13 @@ fit3 <- update(fit, Fertility ~ Agriculture + Examination + Education)
 ---
 ## Swiss data VIFs, 
 ```{r}
-library(car)
+library(car) #for vif() function
 fit <- lm(Fertility ~ . , data = swiss)
-vif(fit)
+vif(fit) # variance inflation factors
 sqrt(vif(fit)) #I prefer sd 
 ```
+this means the variation of Agriculture effect is double of what it would be if it were orthogonal to all the other regressors. Examination and Education are particularly higher, as we know they are highly correlated. 
+
 
 ---
 ## What about residual variance estimation?
@@ -983,5 +998,50 @@ fit3 <- update(fit, Fertility ~ Agriculture + Examination + Education)
 fit5 <- update(fit, Fertility ~ Agriculture + Examination + Education + Catholic + Infant.Mortality)
 anova(fit1, fit3, fit5)
 ```
+
+degrees of freedom 
+residual sums of squares 
+the excess degrees of freedom : of going from model 1 to model 2
+F : S statistic
+Pr(>F) : P value
+
+here it shows that yes, the inclusion of education and examination information appears to be necessary, and yes, the inclusion of religion and infant mortality appears to be necessary.
+
+# Swirl 
+
+During this week of the course you should complete the following lessons in the Regression Models swirl course:
+
+MultiVar Examples2
+MultiVar Examples3
+Residuals Diagnostics and Variation
+
+## Multivar Examples 2
+
+
+Without an intercept (reference group) the tests are whether the expected counts
+| (the groups means) are different from zero. Which spray has the least significant
+| result?
+
+1: sprayF
+2: sprayC
+3: sprayA
+4: sprayB
+
+Selection: 2
+
+| That's the answer I was looking for.
+
+  |====================================================                       |  70%
+| Clearly, which level is first is important to the model. If you wanted a different
+| reference group, for instance, to compare sprayB to sprayC, you could refit the
+| model with a different reference group.
+
+ The R function relevel does precisely this. It re-orders the levels of a factor.
+| We'll do this now. We'll call relevel with two arguments. The first is the factor,
+| in this case InsectSprays$spray, and the second is the level that we want to be
+| first, in this case "C". Store the result in a new variable spray2.
+
+
+
 
 
