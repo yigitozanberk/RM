@@ -846,4 +846,47 @@ summary(lm(edk ~ ekm - 1))$coef
 summary(fit2)$coef
 ```
 
+Binary Problems
 
+```{r}
+library(datasets)
+library(dplyr)
+data(Seatbelts)
+seatbelts = as.data.frame(Seatbelts)
+seatbelts = mutate(seatbelts,
+                   dkb = 1 * (DriversKilled >119),
+                   pp = (PetrolPrice - mean(PetrolPrice))/sd(PetrolPrice),
+                   mm = kms/1000,
+                   mmc = mm- mean(mm))
+table(seatbelts$dkb)
+
+```
+
+
+```{r}
+fit = glm(dkb ~ pp + mmc + law, family = "binomial", data = seatbelts)
+summary(fit)$coef
+round(summary(fit)$coef, 3)
+```
+
+logit scale odds of having > 119 drivers killed that month is 0.003 lower for every 1000 kms driven.
+
+```{r}
+#law coefficient
+exp(-0.615522450)
+```
+
+There was a 54% more deaths before the law was enacted.
+
+conversely
+```{r}
+1 - exp(-0.615522450)
+```
+
+There was a 45% decrease in deaths after the law was enacted. Holding the other variables constant.
+
+```{r}
+exp(-0.002938343)
+```
+
+.3% decrease in the odds of greater than 119 drivers killed that month for every additional 1000 kms driven that month
