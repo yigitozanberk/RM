@@ -890,3 +890,83 @@ exp(-0.002938343)
 ```
 
 .3% decrease in the odds of greater than 119 drivers killed that month for every additional 1000 kms driven that month
+
+```{r}
+fit2 <- glm(cbind(DriversKilled, drivers - DriversKilled) ~ pp + mmc + law, family = binomial, data = seatbelts)
+summary(fit2)
+```
+
+anova for model comparison
+
+```{r}
+fit_1 = glm(dkb ~ law, family = "binomial", data = seatbelts)
+fit_2 = glm(dkb ~ law + pp, family = binomial, data = seatbelts)
+fit_3 = glm(dkb ~ law + pp + mmc, family = binomial, data = seatbelts)
+anova(fit_1, fit_2, fit_3)
+```
+
+
+
+Examples and tricks section 
+
+question 1
+
+```{r}
+library(datasets)
+data(Seatbelts)
+seatbelts <- as.data.frame(Seatbelts)
+#because in the original datasets no. of people killed for 0 kms driven is not very meaningful(because the range of kms variables is very big, and no. of people killed for 0 pounds of petrol price is not very meaningful because petrol price is created with a retail index, we change and scale them a little to make sense)
+#also, kms is >0. centering it allows a better understanding
+library(dplyr)
+seatbelts = mutate(seatbelts,
+                   #standardized Petrol Price
+                   pp = (PetrolPrice - mean(PetrolPrice))/sd(PetrolPrice),
+                   #megameters
+                   mm = kms/1000,
+                   mmc = mm - mean(mm))
+head(seatbelts)
+```
+
+```{r}
+fit = lm(DriversKilled ~ mmc + pp, data = seatbelts)
+summary(fit)
+```
+
+```{r}
+fit2 = lm(I(log(DriversKilled)) ~ mmc + pp, data = seatbelts)
+summary(fit2)
+```
+
+question 3
+
+```{r}
+seatbelts$lawFactor <- NULL
+for(i in 1:nrow(seatbelts)) {
+  if(seatbelts$law[i] == 0){
+    seatbelts$lawFactor[i] <- "No" 
+  } else {
+    seatbelts$lawFactor[i] <- "Yes"
+  }
+}
+
+seatbelts$lawFactor <- relevel(as.factor(seatbelts$lawFactor), "Yes")
+
+fit3 <- lm(DriversKilled ~ mmc + pp + lawFactor, data = seatbelts)
+summary(fit3)
+```
+
+
+question 4
+
+```{r}
+seatbelts = mutate(seatbelts,
+                   #standardized Petrol Price
+                   pp = (PetrolPrice - mean(PetrolPrice))/sd(PetrolPrice),
+                   ppf = as.factor((pp <= -1.5) + (pp <= 0) + (pp <= 1.5) + (pp < Inf)),
+                   #megameters
+                   mm = kms/1000,
+                   mmc = mm - mean(mm))
+head(seatbelts)
+summary(lm(DriversKilled ~ ppf + mmc+ law, data = seatbelts))
+```
+
