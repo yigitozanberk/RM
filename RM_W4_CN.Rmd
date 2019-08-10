@@ -775,7 +775,14 @@ lines(c(0, 1 : 8, 9), c(0, coef(fit)^2, 0), type = "l", lwd = 3, col = "red")
 a <- fft(chord); plot(Re(a)^2, type = "l")
 ```
 
+# Swirl
 
+Variance Inflation Factors
+Overfitting and Underfitting
+Binary Outcomes
+Count Outcomes
+
+## Variance Inflation Factors
 
 
 
@@ -968,5 +975,71 @@ seatbelts = mutate(seatbelts,
                    mmc = mm - mean(mm))
 head(seatbelts)
 summary(lm(DriversKilled ~ ppf + mmc+ law, data = seatbelts))
+```
+
+Adjustment Exercises
+
+1)
+
+```{r}
+library(datasets)
+data(Seatbelts)
+head(Seatbelts)
+seatbelts = as.data.frame(Seatbelts)
+head(seatbelts)
+library(dplyr)
+seatbelts <- mutate(seatbelts,
+                    pp = (PetrolPrice - mean(PetrolPrice))/sd(PetrolPrice),
+                    mm = kms / 1000,
+                    mmc = mm - mean(mm))
+head(seatbelts)
+```
+
+```{r}
+fit1 = lm(DriversKilled ~ mmc, data = seatbelts)
+fit2 = lm(DriversKilled ~ mmc + pp, data = seatbelts)
+sumCoef1 <- summary(fit1)
+sumCoef2 <- summary(fit2)
+sumCoef1$coefficients
+sumCoef2$coefficients
+```
+
+```{r}
+library(ggplot2)
+qplot(x= seatbelts$mmc, y = sumCoef1$residuals) + geom_hline(yintercept = 0, col = "red") 
+```
+
+```{r}
+qplot(x= seatbelts$mmc, y = sumCoef2$residuals) + geom_hline(yintercept = 0, col = "red") 
+```
+
+```{r}
+anova(fit1, fit2)
+```
+
+```{r}
+fit3 = lm(DriversKilled ~ pp, data = seatbelts)
+fit4 = lm(DriversKilled ~ pp + mmc, data = seatbelts)
+sumCoef3 = summary(fit3)
+sumCoef4 = summary(fit4)
+sumCoef3$coefficients
+sumCoef4$coefficients
+```
+
+```{r}
+qplot(x= seatbelts$mmc, y = sumCoef3$residuals) + geom_hline(yintercept = 0, col = "red") 
+```
+
+```{r}
+qplot(x= seatbelts$mmc, y = sumCoef4$residuals) + geom_hline(yintercept = 0, col = "red") 
+```
+
+```{r}
+cor(seatbelts$pp, seatbelts$mmc)
+```
+
+```{r}
+par(mfrow = c(2,2 ))
+plot(fit2)
 ```
 
