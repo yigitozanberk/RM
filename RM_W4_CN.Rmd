@@ -784,6 +784,51 @@ Count Outcomes
 
 ## Variance Inflation Factors
 
+According to its documentation, the Swiss data set consists of a standardized
+| fertility measure and socioeconomic indicators for each of 47 French-speaking
+| provinces of Switzerland in about 1888 when Swiss fertility rates began to fall.
+| Type head(swiss) or View(swiss) to examine the data.
+
+> head(swiss)
+             Fertility Agriculture Examination Education Catholic Infant.Mortality
+Courtelary        80.2        17.0          15        12     9.96             22.2
+Delemont          83.1        45.1           6         9    84.84             22.2
+Franches-Mnt      92.5        39.7           5         5    93.40             20.2
+Moutier           85.8        36.5          12         7    33.77             20.3
+Neuveville        76.9        43.5          17        15     5.16             20.6
+Porrentruy        76.1        35.3           9         7    90.57             26.6
+
+| Nice work!
+
+  |============================================                                |  58%
+| Fertility was thought to depend on five socioeconomic factors: the percent of males
+| working in Agriculture, the percent of draftees receiving the highest grade on the
+| army's Examination, the percent of draftees with Education beyond primary school,
+| the percent of the population which was Roman Catholic, and the rate of Infant
+| Mortality in the province. Use linear regression to model Fertility in terms of
+| these five regressors and an intercept. Store the model in a variable named mdl.
+
+> mdl = lm(Fertility ~ Agriculture + Examination + Education + Catholic + Infant.Mortality, data = swiss)
+
+| Perseverance, that's the answer.
+
+  |================================================                            |  62%
+| Calculate the VIF's for each of the regressors using vif(mdl).
+
+> vif(mdl)
+     Agriculture      Examination        Education         Catholic Infant.Mortality 
+        2.284129         3.675420         2.774943         1.937160         1.107542 
+
+| That's correct!
+
+  |===================================================                         |  67%
+| These VIF's show, for each regression coefficient, the variance inflation due to
+| including all the others. For instance, the variance in the estimated coefficient
+| of Education is 2.774943 times what it might have been if Education were not
+| correlated with the other regressors. Since Education and score on an Examination
+| are likely to be correlated, we might guess that most of the variance inflation for
+| Education is due to including Examination.
+
 
 
 
