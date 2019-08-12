@@ -1043,3 +1043,43 @@ par(mfrow = c(2,2 ))
 plot(fit2)
 ```
 
+```{r}
+library(datasets)
+data(Seatbelts)
+seatbelts = as.data.frame(Seatbelts)
+library(dplyr)
+seatbelts <- mutate(seatbelts,
+                    pp = (PetrolPrice - mean(PetrolPrice))/sd(PetrolPrice),
+                    mm = kms / 1000,
+                    mmc = mm - mean(mm))
+```
+
+```{r}
+fit = lm(DriversKilled ~ mmc + pp + law, data = seatbelts)
+summary(fit)
+```
+
+```{r}
+
+par(mfrow = c(2, 2))
+plot(fit)
+```
+
+```{r}
+myfits = dffits(fit)
+mybetas = dfbetas(fit)
+summary(myfits)
+summary(mybetas)
+```
+
+
+Multiple Variables and model selection question 2
+```{r}
+fit2 = lm(DriversKilled ~ mmc + pp, data = seatbelts)
+fit3 = lm(DriversKilled ~ mmc, data = seatbelts)
+anova(fit3, fit2, fit)
+
+```
+RSS gives you the Residual sum of Squares. so the sum of sq column gives you the difference compared to the line above.
+
+DF the degrees of freedom of the test. if there are 2 additional variables in the second lm, then it's 2.
