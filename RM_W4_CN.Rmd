@@ -707,17 +707,23 @@ This lecture is a bit of an mishmash of interesting things that one can accompli
 * Consider a model $Y_i = f(X_i) + \epsilon$. 
 * How can we fit such a model using linear models (called scatterplot smoothing)
 * Consider the model 
-  $$
+
+$$
   Y_i = \beta_0 + \beta_1 X_i + \sum_{k=1}^d (x_i - \xi_k)_+ \gamma_k + \epsilon_{i}
-  $$
+$$
+  
 where $(a)_+ = a$ if $a > 0$ and $0$ otherwise and $\xi_1 \leq ... \leq \xi_d$ are known knot points.
 * Prove to yourelf that the mean function
+
 $$
 \beta_0 + \beta_1 X_i + \sum_{k=1}^d (x_i - \xi_k)_+ \gamma_k
 $$
+
 is continuous at the knot points.
+
 ---
 ## Simulated example
+how to add knot terms
 ```{r, fig.height=4, fig.width=4}
 n <- 500; x <- seq(0, 4 * pi, length = n); y <- sin(x) + rnorm(n, sd = .3)
 knots <- seq(0, 8 * pi, length = 20); 
@@ -726,6 +732,8 @@ xMat <- cbind(1, x, splineTerms)
 yhat <- predict(lm(y ~ xMat - 1))
 plot(x, y, frame = FALSE, pch = 21, bg = "lightblue", cex = 2)
 lines(x, yhat, col = "red", lwd = 2)
+# sum(coef(mdl6)[2:3]) - iki knot point arasindaki slope coefficienti bulmak icin
+# cikan coeffientlari topla
 ```
 ---
 ## Adding squared terms
@@ -1394,14 +1402,14 @@ logit scale odds of having > 119 drivers killed that month is 0.003 lower for ev
 exp(-0.615522450)
 ```
 
-There was a 54% more deaths before the law was enacted.
+There was a 54% more odds of deaths before the law was enacted.
 
 conversely
 ```{r}
 1 - exp(-0.615522450)
 ```
 
-There was a 45% decrease in deaths after the law was enacted. Holding the other variables constant.
+There was a 45% decrease in odds of deaths after the law was enacted. Holding the other variables constant.
 
 ```{r}
 exp(-0.002938343)
