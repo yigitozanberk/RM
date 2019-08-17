@@ -3,8 +3,8 @@ title: "Regression Modeling Course Project"
 author: "Yigit Ozan Berk"
 date: "8/16/2019"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 Summary: This analysis tries to find answers to following questions:
