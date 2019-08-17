@@ -1,0 +1,144 @@
+---
+title: "Regression Modeling Course Project"
+author: "Yigit Ozan Berk"
+date: "8/16/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Summary: This analysis tries to find answers to following questions:
+
+1 - Is an automatic or manual transmission better for MPG?
+2 - Quantify the MPG difference between automatic and manual transmissions
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+
+
+# Initializing
+
+```{r}
+library(dplyr)
+library(datasets)
+data(mtcars)
+```
+
+Our dataset consists of 11 variables:
+
+
+[, 1]	mpg	Miles/(US) gallon
+[, 2]	cyl	Number of cylinders
+[, 3]	disp	Displacement (cu.in.)
+[, 4]	hp	Gross horsepower
+[, 5]	drat	Rear axle ratio
+[, 6]	wt	Weight (1000 lbs)
+[, 7]	qsec	1/4 mile time
+[, 8]	vs	Engine (0 = V-shaped, 1 = straight)
+[, 9]	am	Transmission (0 = automatic, 1 = manual)
+[,10]	gear	Number of forward gears
+[,11]	carb	Number of carburetors
+
+
+```{r}
+mtcars$am <- as.factor(mtcars$am)
+mtcars$vs <- as.factor(mtcars$vs)
+mtcars$gear <- as.factor(mtcars$gear)
+mtcars$cyl <- as.factor(mtcars$cyl)
+head(mtcars)
+```
+
+# Exploratory Data Analysis
+
+Checking out if the automatic and manual transmission groups have different mean miles per gallon
+
+```{r}
+auto <- mtcars %>% filter(am == "0" )
+manual <-mtcars %>% filter(am == "1")
+summary(auto$mpg)
+summary(manual$mpg)
+```
+
+T-Test
+
+```{r}
+t.test(manual$mpg, auto$mpg, paired = F, var.equal = F)
+```
+
+Our T-test gives that the true difference in means miles per gallon between manual and automatic transmission is not equal to 0. 
+
+# Linear Regression
+
+Initial model with one variable:
+
+```{r}
+fit1 = lm(mpg ~ am, data= mtcars)
+summary(fit1)$coef
+```
+
+The transmission effect seems significant at first glance. According to our initial model, it seems that switching from automatic to manual transmission increases the range of the car by 7.24 miles per gallon. But we need to analyze for possible confounders. 
+
+The most likely possible confounders that may affect the mpg are weight and hp. We also need to check for others in general.
+
+```{r}
+fit1.1 = lm(mpg ~ am + hp, data = mtcars)
+summary(fit1.1)$coef
+```
+
+```{r}
+fit1.2 = lm(mpg ~ am + hp + wt, data = mtcars)
+fit1.3 = lm(mpg ~ am + hp + wt + cyl, data = mtcars)
+anova(fit1, fit1.1, fit1.2, fit1.3)
+```
+
+comparing the nested models, it seems  the cylinder variable is redundant. However, hp and wt variables influence the residual variance significantly.
+
+Let's check the residuals for patterns for the hp and wt variables
+
+```{r}
+par(mfrow = c(2,2))
+plot(fit1.2)
+```
+
+It seems there is some non-linearity. We solve this problem by modeling the interaction between hp and wt variables.
+
+```{r}
+fit1.4 = lm(mpg ~ am + hp*wt, data = mtcars)
+summary(fit1.4)
+```
+
+```{r}
+confint(fit1.4)
+```
+
+
+```{r}
+par(mfrow = c(2,2))
+plot(fit1.4)
+```
+
+Our final model consists of the coefficients of am, hp, wt and the interaction between hp:wt.
+
+```{r}
+dfbetas(fit1.4)
+```
+
+From a quick glance at the dfbetas, we can see that Honda Civic, Toyota Corolla, and Cyrysler Imperial are top 3 influential observations. However, the data is clean and tidy. It is very unlikely that these observations are errors.
+
+```{r}
+cooks.distance(fit1.4)
+```
+
+With a final look at cooks.distance, we can see that there are no outliers in this dataset, creating bias in our model. 
+
+# Conclusion 
+
+We can conclude that ;
+
+- We need more data to see if transmission type makes a difference in mpg variable. With the current data set, we can only conclude with %7.41 confidence that the transmission type changes miles per gallon between the values -2.61086742 and 2.86108128. We cannot conclude if transmission type affects mpg positively or negatively. With the current data set, the statistics test do not provide a significant result(%92.59 > %5). Maybe other variables can be included such us driven kms in city/in suburbs to find out the effect of traffic. 
+- 1 point increase in HP results in 0.12 decrease in miles per gallon.
+- 1000 pounds increase in weight results in 8.10 decrease in miles per gallon.
+- the effect of hp on mpg somewhat depends on the weight of the car.
+
+
+
+
