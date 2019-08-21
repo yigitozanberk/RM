@@ -1,0 +1,62 @@
+---
+title: "PostCourse Notes"
+author: "Yigit Ozan Berk"
+date: "8/17/2019"
+output: html_document
+---
+
+
+I thought I'd pin this post on the basics of using lm() since that's very important for this module.
+
+In the figure below, I've used the ToothGrowth data set we're all familiar with. In every case I've plotted len as a function of dose where the OJ data points are shown as filled circles and the VC ones are open. The regression lines are shown as solid (where there is only one) and solid/dashed where there are two. In those cases, the solid line is the regression against the OJ data and the dashed is the VC. The model I've used in the call to lm() in each case is the title of the chart.
+
+
+The basics of these various models can be summarized here (when x is a continuous variable and w is a factor - as per the ToothGrowth data set where dose is continuous and supp is a factor).
+
+
+1
+2
+3
+4
+5
+6
+model <- lm(y ~ 1)     ## Intercept only (no slope coefficient)
+model <- lm(y ~ x - 1) ## Slope only (no intercept coefficient)
+model <- lm(y ~ x)     ## Intercept & slope (x is not a factor)
+model <- lm(y ~ w)     ## Intercepts only (w is a factor)
+model <- lm(y ~ x + w) ## Intercepts & slope against confounding x 
+    & w
+model <- lm(y ~ x * w) ## Intercepts & slopes against interacting 
+    x & w
+The details of the equations used in the minimization for the models in the first 6 charts above are (where the B values are the refined coefficients):
+
+
+1
+2
+3
+4
+5
+6
+lm(y ~ 1)     :   yhat = B0
+lm(y ~ x - 1) :   yhat = B1*x
+lm(y ~ x)     :   yhat = B0 + B1*x
+lm(y ~ w)     :   yhat = B0 + B2*w
+lm(y ~ x + w) :   yhat = B0 + B1*x + B2*w
+lm(y ~ x * w) :   yhat = B0 + B1*x + B2*w + B3*x*w
+Note that in the equations above, w is assumed to be a 2-level factor (values 0 & 1) - if it has more levels then you need to add an additional coefficient for each additional level.
+
+The last 2 charts above show what happens when you transform the x-axis - in this case using the log function - NB this is still a linear model since it is linearity in the coefficients (B values) that is important not the axis transformations. The equations used in these last 2 minimizations are:
+
+
+1
+2
+3
+lm(y ~ I(log(x)) + w) :   yhat = B0 + B1*log(x) + B2*w
+lm(y ~ I(log(x)) * w) :   yhat = B0 + B1*log(x) + B2*w + B3*log(x
+    )*w
+The information presented above is all covered in the slides for this module but I thought it might help to condense and summarize it here with some examples from a different data set.
+
+I have closed this post because if people start posting on it from multiple different sessions then it's going to get very confusing. If anyone has any questions about the post above then just start a new thread in your own session and I'll try to answer.
+86 Upvotes
+Reply
+Follow this discussion

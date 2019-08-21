@@ -1602,3 +1602,115 @@ anova(fit3, fit2, fit)
 RSS gives you the Residual sum of Squares. so the sum of sq column gives you the difference compared to the line above.
 
 DF the degrees of freedom of the test. if there are 2 additional variables in the second lm, then it's 2.
+
+Count data questions
+
+1
+
+```{r}
+library(datasets)
+data(Seatbelts)
+seatbelts = as.data.frame(Seatbelts)
+library(dplyr)
+seatbelts <- mutate(seatbelts,
+                    pp = (PetrolPrice - mean(PetrolPrice))/sd(PetrolPrice),
+                    mm = kms / 1000,
+                    mmc = mm - mean(mm))
+fit1 = glm(DriversKilled ~ pp + mmc + law, family = poisson, data =seatbelts)
+summary(fit1)$coef
+```
+
+```{r}
+1 - exp(-0.114877106) # because it's negative
+```
+
+there is an 11% decrease of drivers killed at the expected no of drivers killed after the law was in effect.
+
+```{r}
+1 - exp(-0.009980975)
+```
+
+There is an 9% decrease of drivers killed for additional 1000 kms driven.
+
+```{r}
+exp(4.819845137)
+```
+
+123.94 is the expected number of drivers killed for the average pp and the average kms driven at the time when the law was not active.
+
+question 2
+
+```{r}
+fit2 = lm(I(log(DriversKilled)) ~ pp + mmc + law, data = seatbelts)
+summary(fit2)$coef
+```
+
+```{r}
+exp(confint(fit1))
+```
+
+```{r}
+ summary(fit1)$coef
+summary(fit2)$coef
+```
+ 
+when we log the outcome in fit2, the consequence is the interpretation of the model.
+```{r}
+1 - exp(-0.131450856) # 1- exp(coef) because the coef is negative
+```
+
+the fit2 model law coefficient tells us that we expect a 12 % decrease in geometric mean(because the outcome is in log scale) of driverskilled per month after the law
+was issued in effect.
+
+question 3
+```{r}
+fit3 = glm(DriversKilled ~ pp + mmc + law, offset = log(drivers), family = poisson, data =seatbelts)
+sumCoef = summary(fit3)$coefficients
+sumCoef
+summary(fit1)$coefficients
+```
+
+Very Different interpretations for different model fits. The fit3 model is modeling the log of the expected value of driverskilled/totalnumberofdriverskilled
+
+fit1 is modeling the log of expected value Y.
+
+```{r}
+exp(0.028484328)
+```
+
+There's around 3% increase in driverskilled among those killed or seriously injured after the law was enacted, compared to driverskilled among those killed or seriously injured before the law was enacted.
+
+
+```{r}
+fit4 = glm(cbind(DriversKilled, drivers - DriversKilled) ~ pp + mmc + law, family = binomial, data = seatbelts)
+#looking at Driverskilled as a proportion of drivers
+sumCoef4 = summary(fit4)$coefficients
+sumCoef4
+```
+Similar to fit3. fit4 models two columns of driverskilled | drivers seriously injured. Outcomes are very similar to fit3.
+
+When you put the log offset, you're looking at the proportion and not the raw number
+
+question 4
+
+```{r}
+fit5 = glm(DriversKilled ~ law, family = poisson, data = seatbelts)
+fit5.2 = glm(DriversKilled ~ law + pp, family = poisson, data = seatbelts)
+fit5.3 = glm(DriversKilled ~ law + pp + mmc, family = poisson, data = seatbelts)
+anova(fit5, fit5.2, fit5.3)
+```
+
+apparently all of the regression variables are very necessary.
+
+1 degree of freedom with 77.178 deviance. (think about chi-squared dist. it's the square of standard normal dist. so a standard deviation of 2 in st. normal dist. is equal to 4 in chi-squared. in the anova results, this number is 77.178. So it is very very far out in terms of standard deviations of chi-squared distribution)
+
+```{r}
+summary(fit5)$coef
+summary(fit5.2)$coef
+summary(fit5.3)$coef
+```
+
+The effect and significance of law variable drops seriously with the addition of pp and mmc variables. however, in the final model law is still very significant, as the other two variables. so we keep law, pp, mmc in the model. 
+
+
+
