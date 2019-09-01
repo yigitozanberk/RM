@@ -1,0 +1,96 @@
+---
+title: "FoB problems"
+author: "Yigit Ozan Berk"
+date: "8/22/2019"
+output: html_document
+---
+
+SMOKE.dat
+
+```{r}
+library(miceadds)
+library(dplyr)
+load.Rdata(filename = "./data/SMOKE.DAT.rdata", "smoke.dat")
+head(smoke.dat)
+```
+
+```{r}
+df1 = mutate(smoke.dat, month = ntile(Day_abs, 12))
+head(df1)
+```
+
+```{r}
+library(ggplot2)
+qplot(df1$month, fill = I("magenta"))
+```
+
+```{r}
+probs = df1 %>% group_by(month) %>% summarise(n(), prob = n()/nrow(df1))
+probs
+```
+
+```{r}
+probs[c(1, 3, 6), ]
+```
+
+```{r}
+#initial model
+fit1 = glm(Day_abs ~ Cig_day, family = poisson, data = df1)
+fit2 = glm(Day_abs ~ Age + Cig_day, family = poisson, data = df1)
+fit3 = glm(Day_abs ~ Age + I(as.factor(Gender)) + Cig_day, family = poisson, data = df1)
+fit4 = glm(Day_abs ~ Age + I(as.factor(Gender)) + Cig_day  + co, family = poisson, data = df1)
+summary(fit1)$coef
+summary(fit2)$coef
+summary(fit3)$coef
+summary(fit4)$coef
+anova(fit1, fit2, fit3, fit4)
+```
+
+4th model fits best apparently. the beginnig co levels in blood seems to be very significant for quitting.
+
+```{r}
+summary(fit4)
+
+```
+
+```{r}
+exp(confint(fit4))
+```
+
+```{r}
+1- exp(summary(fit4)$coef[5,1])
+```
+
+Increase of 1 point in starting CO levels in blood results in .119 % decrease in days abstinent.
+```{r}
+exp(summary(fit4)$coef[1,1]) -1
+exp(summary(fit4)$coef[2,1]) -1
+exp(summary(fit4)$coef[3,1]) -1
+exp(summary(fit4)$coef[4,1]) -1
+```
+
+The average days abstinent for average age, average cigs_day and average co levels for males is 71.
+
+females tend to increase abstinent days 3.81%.
+
+
+```{r}
+data(sleep)
+sleep
+```
+
+everything is normalized according to 10 hours
+
+```{r}
+g1 = sleep$extra[1:10]
+g2 = sleep$extra[11 : 20]
+difference = g2 - g1
+mn = mean(difference) # 1.67
+s = sd(difference) #1.13
+n = 10
+mn + c(-1, 1) * qt(.975, n-1) * s / sqrt(n) #95 % conf. int.
+t.test(difference)$conf.int
+```
+
+
+
